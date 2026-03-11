@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Profile – TravelPlanner</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="index.html">
+        <i class="bi bi-airplane-fill me-2"></i>TravelPlanner
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="explore.html">Explore</a></li>
+          <li class="nav-item"><a class="nav-link" href="trips.html">My Trips</a></li>
+          <li class="nav-item"><a class="nav-link" href="budget.html">Budget</a></li>
+        </ul>
+        <div id="themeToggleWrap" class="d-flex align-items-center"></div>
+        <ul class="navbar-nav" id="navUser"></ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== PROFILE HEADER ===== -->
+  <div style="background:linear-gradient(135deg,#0d6efd,#0a58ca); padding:2.5rem 0; color:white;">
+    <div class="container">
+      <div class="d-flex align-items-center gap-4 flex-wrap">
+        <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center fw-bold"
+             id="avatarCircle"
+             style="width:90px;height:90px;font-size:2rem;flex-shrink:0;">CS</div>
+        <div>
+          <h2 class="fw-bold mb-1" id="profileName">Cristian Stoian</h2>
+          <p class="opacity-85 mb-1" id="profileEmail">
+            <i class="bi bi-envelope me-2"></i>cristian.stoian@gmail.com
+          </p>
+          <p class="opacity-75 small mb-0">
+            <i class="bi bi-calendar-check me-2"></i>Member since January 2024 &nbsp;·&nbsp;
+            <i class="bi bi-suitcase-lg me-2"></i><span id="tripCount">6</span> trips planned
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="container py-4 pb-5">
+    <div class="row g-4">
+
+      <!-- LEFT: Edit profile form -->
+      <div class="col-lg-7">
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-4" id="profileTabs" role="tablist">
+          <li class="nav-item">
+            <button class="nav-link active fw-semibold" data-bs-toggle="tab" data-bs-target="#tabInfo">
+              <i class="bi bi-person me-1"></i>Information
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link fw-semibold" data-bs-toggle="tab" data-bs-target="#tabPrefs">
+              <i class="bi bi-sliders me-1"></i>Preferences
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link fw-semibold" data-bs-toggle="tab" data-bs-target="#tabSecurity">
+              <i class="bi bi-shield-lock me-1"></i>Security
+            </button>
+          </li>
+        </ul>
+
+        <div class="tab-content">
+
+          <!-- TAB: Personal Info -->
+          <div class="tab-pane fade show active" id="tabInfo">
+            <div class="form-card card p-4">
+              <h6 class="fw-bold mb-4">Personal Information</h6>
+              <form id="profileForm" onsubmit="saveProfile(event)">
+                <div class="row g-3 mb-3">
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">First Name</label>
+                    <input type="text" class="form-control" id="firstName" value="Cristian" required />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">Last Name</label>
+                    <input type="text" class="form-control" id="lastName" value="Stoian" required />
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Email</label>
+                  <input type="email" class="form-control" id="emailInput"
+                         value="cristian.stoian@gmail.com" required />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Phone</label>
+                  <input type="tel" class="form-control" id="phone"
+                         placeholder="+40 7xx xxx xxx" />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Country of Residence</label>
+                  <select class="form-select" id="country">
+                    <option selected>Romania</option>
+                    <option>Germany</option>
+                    <option>France</option>
+                    <option>Italy</option>
+                    <option>Spain</option>
+                    <option>UK</option>
+                    <option>USA</option>
+                  </select>
+                </div>
+                <div class="mb-4">
+                  <label class="form-label fw-semibold">Bio / About Me</label>
+                  <textarea class="form-control" id="bio" rows="3"
+                            placeholder="A few words about yourself and your passion for travel...">Passionate about travel and new cultures. I've already visited 12 countries and plan to reach 50!</textarea>
+                </div>
+                <div class="d-flex gap-2">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save me-2"></i>Save Changes
+                  </button>
+                  <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
+                    Cancel
+                  </button>
+                </div>
+              </form>
+              <div id="saveSuccess" class="alert alert-success mt-3 d-none">
+                <i class="bi bi-check-circle me-2"></i>Profile updated successfully!
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB: Preferences -->
+          <div class="tab-pane fade" id="tabPrefs">
+            <div class="form-card card p-4">
+              <h6 class="fw-bold mb-4">Travel Preferences</h6>
+              <div class="mb-4">
+                <label class="form-label fw-semibold">Preferred Activity Types</label>
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                  <span class="pref-tag selected" data-pref="culture"><i class="bi bi-bank me-1"></i>Culture</span>
+                  <span class="pref-tag selected" data-pref="food"><i class="bi bi-egg-fried me-1"></i>Gastronomy</span>
+                  <span class="pref-tag" data-pref="nature"><i class="bi bi-tree me-1"></i>Nature</span>
+                  <span class="pref-tag selected" data-pref="adventure"><i class="bi bi-lightning me-1"></i>Adventure</span>
+                  <span class="pref-tag" data-pref="beach"><i class="bi bi-umbrella me-1"></i>Beach</span>
+                  <span class="pref-tag" data-pref="nightlife"><i class="bi bi-moon-stars me-1"></i>Nightlife</span>
+                  <span class="pref-tag selected" data-pref="photography"><i class="bi bi-camera me-1"></i>Photography</span>
+                  <span class="pref-tag" data-pref="wellness"><i class="bi bi-heart-pulse me-1"></i>Wellness</span>
+                </div>
+              </div>
+              <div class="mb-4">
+                <label class="form-label fw-semibold">Preferred Travel Style</label>
+                <select class="form-select">
+                  <option selected>Solo</option>
+                  <option>Couple</option>
+                  <option>Group of Friends</option>
+                  <option>Family with Kids</option>
+                </select>
+              </div>
+              <div class="mb-4">
+                <label class="form-label fw-semibold">Average Budget per Trip</label>
+                <select class="form-select">
+                  <option>Budget (under $1,000)</option>
+                  <option selected>Moderate ($1,000–$3,000)</option>
+                  <option>Comfortable ($3,000–$6,000)</option>
+                  <option>Luxury (over $6,000)</option>
+                </select>
+              </div>
+              <div class="mb-4">
+                <label class="form-label fw-semibold">Preferred Duration</label>
+                <select class="form-select">
+                  <option>Weekend (2–3 days)</option>
+                  <option selected>Short (4–7 days)</option>
+                  <option>Medium (8–14 days)</option>
+                  <option>Long (over 14 days)</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" onclick="showToast('Preferences saved!')">
+                <i class="bi bi-save me-2"></i>Save Preferences
+              </button>
+            </div>
+          </div>
+
+          <!-- TAB: Security -->
+          <div class="tab-pane fade" id="tabSecurity">
+            <div class="form-card card p-4">
+              <h6 class="fw-bold mb-4">Change Password</h6>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Current Password</label>
+                <input type="password" class="form-control" placeholder="••••••••" />
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">New Password</label>
+                <input type="password" class="form-control" id="newPass"
+                       placeholder="Minimum 8 characters" oninput="checkPassStrength()" />
+                <div class="progress mt-2" style="height:5px;" id="passStrengthBar">
+                  <div class="progress-bar" id="passBar" style="width:0%"></div>
+                </div>
+                <small id="passHint" class="text-muted">Enter password to see strength level</small>
+              </div>
+              <div class="mb-4">
+                <label class="form-label fw-semibold">Confirm New Password</label>
+                <input type="password" class="form-control" placeholder="••••••••" />
+              </div>
+              <button class="btn btn-warning" onclick="showToast('Password changed!')">
+                <i class="bi bi-key me-2"></i>Change Password
+              </button>
+
+              <hr class="my-4" />
+              <h6 class="fw-bold mb-3 text-danger">Danger Zone</h6>
+              <button class="btn btn-outline-danger btn-sm"
+                      onclick="if(confirm('Are you sure you want to delete your account?')) alert('Account deleted.')">
+                <i class="bi bi-trash me-2"></i>Delete Account
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- RIGHT: Stats + recent trips -->
+      <div class="col-lg-5">
+
+        <div class="card tp-card p-4 mb-4">
+          <h6 class="fw-bold mb-3"><i class="bi bi-trophy me-2 text-warning"></i>Statistics</h6>
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="text-center p-3 bg-primary bg-opacity-10 rounded-3">
+                <div class="fw-bold fs-4 text-primary">6</div>
+                <small class="text-muted">Total Trips</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="text-center p-3 bg-success bg-opacity-10 rounded-3">
+                <div class="fw-bold fs-4 text-success">12</div>
+                <small class="text-muted">Countries Visited</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="text-center p-3 bg-warning bg-opacity-10 rounded-3">
+                <div class="fw-bold fs-4 text-warning">48</div>
+                <small class="text-muted">Travel Days</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="text-center p-3 bg-info bg-opacity-10 rounded-3">
+                <div class="fw-bold fs-4 text-info">$14,200</div>
+                <small class="text-muted">Total Spent</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card tp-card p-4 mb-4">
+          <h6 class="fw-bold mb-3"><i class="bi bi-geo-alt me-2 text-danger"></i>Favorite Destinations</h6>
+          <div class="d-flex flex-wrap gap-2">
+            <span class="badge bg-light text-dark border px-3 py-2">🇯🇵 Japan</span>
+            <span class="badge bg-light text-dark border px-3 py-2">🇫🇷 France</span>
+            <span class="badge bg-light text-dark border px-3 py-2">🇮🇩 Bali</span>
+            <span class="badge bg-light text-dark border px-3 py-2">🇬🇷 Greece</span>
+            <span class="badge bg-light text-dark border px-3 py-2">🇮🇹 Italy</span>
+          </div>
+        </div>
+
+        <div class="card tp-card p-4">
+          <h6 class="fw-bold mb-3"><i class="bi bi-suitcase-lg me-2 text-primary"></i>Latest Trip</h6>
+          <div class="d-flex gap-3 align-items-center">
+            <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=100&q=80"
+                 class="rounded-2 flex-shrink-0" style="width:64px;height:64px;object-fit:cover;"
+                 alt="Bali" />
+            <div>
+              <div class="fw-semibold">Bali Relaxation</div>
+              <div class="text-muted small"><i class="bi bi-geo-alt me-1"></i>Bali, Indonesia</div>
+              <div class="text-muted small"><i class="bi bi-calendar3 me-1"></i>1–14 Dec 2024</div>
+              <a href="trip-details.html" class="btn btn-outline-primary btn-sm mt-2">
+                <i class="bi bi-eye me-1"></i>Details
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Toast notification -->
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999">
+    <div id="liveToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+      <div class="d-flex">
+        <div class="toast-body" id="toastMsg">Changes saved!</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <footer>
+    <div class="container text-center">
+      <p class="small opacity-50 mb-0">&copy; 2026 TravelPlanner. PAW Project – University.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    function saveProfile(e) {
+      e.preventDefault();
+      const first = document.getElementById('firstName').value.trim();
+      const last  = document.getElementById('lastName').value.trim();
+      const email = document.getElementById('emailInput').value.trim();
+      const name  = first + ' ' + last;
+
+      // Update stored user
+      setCurrentUser({ name, email });
+      renderNavUser();
+
+      // Update header
+      document.getElementById('profileName').textContent = name;
+      document.getElementById('profileEmail').innerHTML =
+        `<i class="bi bi-envelope me-2"></i>${email}`;
+      const initials = (first[0] || '') + (last[0] || '');
+      document.getElementById('avatarCircle').textContent = initials.toUpperCase();
+
+      document.getElementById('saveSuccess').classList.remove('d-none');
+      setTimeout(() => document.getElementById('saveSuccess').classList.add('d-none'), 3000);
+    }
+
+    function resetForm() {
+      const user = getCurrentUser();
+      const parts = user.name.split(' ');
+      document.getElementById('firstName').value   = parts[0] || '';
+      document.getElementById('lastName').value    = parts.slice(1).join(' ') || '';
+      document.getElementById('emailInput').value  = user.email;
+    }
+
+    function showToast(msg) {
+      document.getElementById('toastMsg').textContent = msg;
+      new bootstrap.Toast(document.getElementById('liveToast')).show();
+    }
+
+    function checkPassStrength() {
+      const val = document.getElementById('newPass').value;
+      const bar = document.getElementById('passBar');
+      const hint = document.getElementById('passHint');
+      let score = 0;
+      if (val.length >= 8) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+      const levels = [
+        { pct: 0,   cls: 'bg-secondary', label: 'Enter password' },
+        { pct: 25,  cls: 'bg-danger',    label: 'Weak' },
+        { pct: 50,  cls: 'bg-warning',   label: 'Medium' },
+        { pct: 75,  cls: 'bg-info',      label: 'Good' },
+        { pct: 100, cls: 'bg-success',   label: 'Excellent' }
+      ];
+      const lv = levels[score];
+      bar.style.width  = lv.pct + '%';
+      bar.className    = 'progress-bar ' + lv.cls;
+      hint.textContent = lv.label;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initPrefTags();
+      const user = getCurrentUser();
+      const parts = user.name.split(' ');
+      document.getElementById('firstName').value = parts[0] || '';
+      document.getElementById('lastName').value  = parts.slice(1).join(' ') || '';
+      document.getElementById('emailInput').value = user.email;
+      document.getElementById('profileName').textContent = user.name;
+      document.getElementById('profileEmail').innerHTML =
+        `<i class="bi bi-envelope me-2"></i>${user.email}`;
+      const initials = parts.map(p => p[0]).join('').toUpperCase().slice(0,2);
+      document.getElementById('avatarCircle').textContent = initials;
+    });
+  </script>
+</body>
+</html>

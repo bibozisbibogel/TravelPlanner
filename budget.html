@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Budget – TravelPlanner</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="index.html">
+        <i class="bi bi-airplane-fill me-2"></i>TravelPlanner
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="explore.html">Explore</a></li>
+          <li class="nav-item"><a class="nav-link" href="trips.html">My Trips</a></li>
+          <li class="nav-item"><a class="nav-link" href="budget.html">Budget</a></li>
+        </ul>
+        <div id="themeToggleWrap" class="d-flex align-items-center"></div>
+        <ul class="navbar-nav" id="navUser"></ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== PAGE HEADER ===== -->
+  <div class="page-header">
+    <div class="container d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div>
+        <h1><i class="bi bi-wallet2 me-2"></i>Budget & Expenses</h1>
+        <p>Track and manage the budget for all your trips</p>
+      </div>
+      <select class="form-select" style="width:auto;" id="tripSelector" onchange="loadTrip()">
+        <option value="japan">Japan Adventure (Apr 2025)</option>
+        <option value="paris">Romantic Paris (Jun 2025)</option>
+        <option value="bali">Bali Relaxation (Dec 2024)</option>
+      </select>
+    </div>
+  </div>
+
+  <main class="container pb-5">
+
+    <!-- ===== SUMMARY CARDS ===== -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-value text-primary" id="totalBudget">$3,500</div>
+          <div class="stat-label">Total Budget</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-value text-danger" id="totalSpent">$2,100</div>
+          <div class="stat-label">Spent</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-value text-success" id="totalRemaining">$1,400</div>
+          <div class="stat-label">Remaining</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-value" id="budgetPct" style="color:#0d6efd">60%</div>
+          <div class="stat-label">Budget Used</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="row g-4">
+
+      <!-- LEFT: Category breakdown -->
+      <div class="col-lg-7">
+        <div class="card tp-card p-4 mb-4">
+          <h6 class="fw-bold mb-3"><i class="bi bi-bar-chart me-2 text-primary"></i>Breakdown by Category</h6>
+          <div id="categoryBars"></div>
+        </div>
+
+        <!-- Add expense -->
+        <div class="card tp-card p-4">
+          <h6 class="fw-bold mb-3"><i class="bi bi-plus-circle me-2 text-success"></i>Add Expense</h6>
+          <form id="expenseForm" class="row g-2" onsubmit="addExpense(event)">
+            <div class="col-md-5">
+              <input type="text" class="form-control" id="expDesc"
+                     placeholder="Expense description" required />
+            </div>
+            <div class="col-md-3">
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input type="number" class="form-control" id="expAmount"
+                       placeholder="Amount" min="1" required />
+              </div>
+            </div>
+            <div class="col-md-3">
+              <select class="form-select" id="expCategory">
+                <option value="flights">Flights</option>
+                <option value="accommodation">Accommodation</option>
+                <option value="activities">Activities</option>
+                <option value="food">Food</option>
+                <option value="transport">Local Transport</option>
+                <option value="shopping">Shopping</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="col-md-1">
+              <button type="submit" class="btn btn-success w-100">
+                <i class="bi bi-plus-lg"></i>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- RIGHT: Recent transactions + tips -->
+      <div class="col-lg-5">
+        <div class="card tp-card p-4 mb-4">
+          <h6 class="fw-bold mb-3"><i class="bi bi-clock-history me-2 text-warning"></i>Recent Transactions</h6>
+          <div id="transactionList"></div>
+        </div>
+
+        <div class="card tp-card p-4">
+          <h6 class="fw-bold mb-3"><i class="bi bi-lightbulb me-2 text-info"></i>Budget Tips</h6>
+          <div id="budgetTips"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer>
+    <div class="container text-center">
+      <p class="small opacity-50 mb-0">&copy; 2026 TravelPlanner. PAW Project – University.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    const TRIP_DATA = {
+      japan: {
+        total: 3500,
+        categories: [
+          { key:'flights',       label:'Flights',          icon:'bi-airplane',    color:'primary',   budget:1500, spent:1300 },
+          { key:'accommodation', label:'Accommodation',    icon:'bi-building',    color:'warning',   budget:600,  spent:450  },
+          { key:'activities',    label:'Activities',       icon:'bi-geo-alt',     color:'success',   budget:300,  spent:180  },
+          { key:'food',          label:'Food',             icon:'bi-egg-fried',   color:'danger',    budget:350,  spent:170  },
+          { key:'transport',     label:'Local Transport',  icon:'bi-train-front', color:'info',      budget:150,  spent:0    },
+          { key:'shopping',      label:'Shopping',         icon:'bi-bag',         color:'secondary', budget:600,  spent:0    }
+        ],
+        transactions: [
+          { desc:'Emirates flight ticket OTP-NRT',      cat:'Flights',        amount:1300, date:'5 Mar 2025', icon:'bi-airplane',  color:'primary' },
+          { desc:'Hotel Shinjuku Granbell 4 nights',    cat:'Accommodation',  amount:420,  date:'6 Mar 2025', icon:'bi-building',  color:'warning' },
+          { desc:'Ryokan Tawaraya Kyoto',               cat:'Accommodation',  amount:30,   date:'7 Mar 2025', icon:'bi-building',  color:'warning' },
+          { desc:'Fuji & Hakone excursion',             cat:'Activities',     amount:120,  date:'7 Mar 2025', icon:'bi-geo-alt',   color:'success' },
+          { desc:'Sushi Tsukiji',                       cat:'Food',           amount:45,   date:'8 Mar 2025', icon:'bi-egg-fried', color:'danger'  },
+          { desc:'Museum Pass Tokyo',                   cat:'Activities',     amount:60,   date:'8 Mar 2025', icon:'bi-bank',      color:'success' }
+        ]
+      },
+      paris: {
+        total: 2000,
+        categories: [
+          { key:'flights',       label:'Flights',        icon:'bi-airplane',    color:'primary',   budget:500,  spent:0   },
+          { key:'accommodation', label:'Accommodation',  icon:'bi-building',    color:'warning',   budget:700,  spent:0   },
+          { key:'activities',    label:'Activities',     icon:'bi-geo-alt',     color:'success',   budget:300,  spent:0   },
+          { key:'food',          label:'Food',           icon:'bi-egg-fried',   color:'danger',    budget:300,  spent:0   },
+          { key:'transport',     label:'Transport',      icon:'bi-train-front', color:'info',      budget:100,  spent:0   },
+          { key:'shopping',      label:'Shopping',       icon:'bi-bag',         color:'secondary', budget:100,  spent:0   }
+        ],
+        transactions: []
+      },
+      bali: {
+        total: 2800,
+        categories: [
+          { key:'flights',       label:'Flights',        icon:'bi-airplane',    color:'primary',   budget:900,  spent:870  },
+          { key:'accommodation', label:'Accommodation',  icon:'bi-building',    color:'warning',   budget:800,  spent:780  },
+          { key:'activities',    label:'Activities',     icon:'bi-geo-alt',     color:'success',   budget:400,  spent:380  },
+          { key:'food',          label:'Food',           icon:'bi-egg-fried',   color:'danger',    budget:400,  spent:390  },
+          { key:'transport',     label:'Transport',      icon:'bi-train-front', color:'info',      budget:200,  spent:180  },
+          { key:'shopping',      label:'Shopping',       icon:'bi-bag',         color:'secondary', budget:100,  spent:50   }
+        ],
+        transactions: [
+          { desc:'Bucharest-Bali Emirates flight', cat:'Flights',        amount:870, date:'1 Nov 2024', icon:'bi-airplane',   color:'primary' },
+          { desc:'Villa Seminyak 7 nights',        cat:'Accommodation',  amount:560, date:'1 Nov 2024', icon:'bi-building',   color:'warning' },
+          { desc:'Bungalow Ubud 7 nights',         cat:'Accommodation',  amount:220, date:'1 Nov 2024', icon:'bi-building',   color:'warning' },
+          { desc:'Surf lessons Kuta Beach',        cat:'Activities',     amount:150, date:'3 Dec 2024', icon:'bi-water',      color:'success' },
+          { desc:'Temple Tour Ubud',               cat:'Activities',     amount:80,  date:'7 Dec 2024', icon:'bi-bank',       color:'success' },
+          { desc:'Local restaurant meals',         cat:'Food',           amount:390, date:'14 Dec 2024', icon:'bi-egg-fried', color:'danger'  }
+        ]
+      }
+    };
+
+    const TIPS = [
+      { icon:'bi-airplane text-primary',   text:'Book flights 3–4 months in advance for better prices.' },
+      { icon:'bi-credit-card text-success', text:'Use a card with no foreign transaction fees for payments abroad.' },
+      { icon:'bi-buildings text-warning',   text:'Downtown hotels cost more but you save on local transport.' },
+      { icon:'bi-fork-knife text-danger',   text:'Try markets and local restaurants – cheaper and more authentic.' },
+      { icon:'bi-bag text-secondary',       text:'Limit shopping to unique local products, avoid kitsch souvenirs.' }
+    ];
+
+    let currentData = null;
+
+    function loadTrip() {
+      const key = document.getElementById('tripSelector').value;
+      currentData = TRIP_DATA[key];
+      renderAll();
+    }
+
+    function renderAll() {
+      const d = currentData;
+      const spent = d.categories.reduce((s, c) => s + c.spent, 0);
+      const remaining = d.total - spent;
+      const pct = Math.round((spent / d.total) * 100);
+
+      document.getElementById('totalBudget').textContent    = formatCurrency(d.total);
+      document.getElementById('totalSpent').textContent     = formatCurrency(spent);
+      document.getElementById('totalRemaining').textContent = formatCurrency(remaining);
+      document.getElementById('budgetPct').textContent      = pct + '%';
+
+      // Category bars
+      document.getElementById('categoryBars').innerHTML = d.categories.map(c => {
+        const p = c.budget > 0 ? Math.min(100, Math.round((c.spent / c.budget) * 100)) : 0;
+        const barColor = p > 95 ? 'danger' : p > 80 ? 'warning' : c.color;
+        return `
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <div class="d-flex align-items-center gap-2">
+                <span class="rounded-circle bg-${c.color} bg-opacity-10 text-${c.color}
+                             d-flex align-items-center justify-content-center flex-shrink-0"
+                      style="width:32px;height:32px;font-size:0.9rem;">
+                  <i class="bi ${c.icon}"></i>
+                </span>
+                <span class="fw-semibold">${c.label}</span>
+              </div>
+              <div class="text-end small">
+                <span class="text-${barColor} fw-bold">${formatCurrency(c.spent)}</span>
+                <span class="text-muted"> / ${formatCurrency(c.budget)}</span>
+                <span class="badge bg-${barColor} ms-1">${p}%</span>
+              </div>
+            </div>
+            <div class="budget-bar-wrap">
+              <div class="budget-bar-fill bg-${barColor}" style="width:${p}%"></div>
+            </div>
+          </div>`;
+      }).join('');
+
+      // Transactions
+      if (d.transactions.length === 0) {
+        document.getElementById('transactionList').innerHTML = `
+          <p class="text-muted small text-center py-2">No transactions recorded</p>`;
+      } else {
+        document.getElementById('transactionList').innerHTML = d.transactions.map(t => `
+          <div class="d-flex align-items-center gap-3 py-2 border-bottom">
+            <span class="rounded-circle bg-${t.color} bg-opacity-10 text-${t.color}
+                         d-flex align-items-center justify-content-center flex-shrink-0"
+                  style="width:36px;height:36px;">
+              <i class="bi ${t.icon}"></i>
+            </span>
+            <div class="flex-grow-1 min-w-0">
+              <div class="fw-semibold small text-truncate">${t.desc}</div>
+              <div class="text-muted" style="font-size:0.75rem;">${t.cat} · ${t.date}</div>
+            </div>
+            <span class="fw-bold text-danger small">-${formatCurrency(t.amount)}</span>
+          </div>`).join('');
+      }
+
+      // Tips
+      document.getElementById('budgetTips').innerHTML = TIPS.map(t => `
+        <div class="d-flex gap-2 align-items-start mb-2">
+          <i class="bi ${t.icon} mt-1 flex-shrink-0"></i>
+          <p class="small mb-0">${t.text}</p>
+        </div>`).join('');
+    }
+
+    function addExpense(e) {
+      e.preventDefault();
+      const desc   = document.getElementById('expDesc').value;
+      const amount = parseFloat(document.getElementById('expAmount').value);
+      const catKey = document.getElementById('expCategory').value;
+
+      const cat = currentData.categories.find(c => c.key === catKey);
+      if (cat) { cat.spent += amount; }
+
+      currentData.transactions.unshift({
+        desc, cat: cat ? cat.label : 'Other', amount,
+        date: new Date().toLocaleDateString('en-US'),
+        icon: cat ? cat.icon : 'bi-cash', color: cat ? cat.color : 'secondary'
+      });
+
+      document.getElementById('expenseForm').reset();
+      renderAll();
+    }
+
+    document.addEventListener('DOMContentLoaded', loadTrip);
+  </script>
+</body>
+</html>

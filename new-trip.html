@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plan a Trip – TravelPlanner</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="index.html">
+        <i class="bi bi-airplane-fill me-2"></i>TravelPlanner
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="explore.html">Explore</a></li>
+          <li class="nav-item"><a class="nav-link" href="trips.html">My Trips</a></li>
+          <li class="nav-item"><a class="nav-link" href="budget.html">Budget</a></li>
+        </ul>
+        <div id="themeToggleWrap" class="d-flex align-items-center"></div>
+        <ul class="navbar-nav" id="navUser"></ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== PAGE HEADER ===== -->
+  <div class="page-header">
+    <div class="container">
+      <h1><i class="bi bi-plus-circle me-2"></i>Plan a New Trip</h1>
+      <p>Fill in the details and let the AI create the perfect itinerary</p>
+    </div>
+  </div>
+
+  <main class="container pb-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-9">
+
+        <!-- Progress steps -->
+        <div class="d-flex justify-content-center gap-2 mb-4 flex-wrap">
+          <div class="step-indicator active" id="step-1">
+            <span class="badge rounded-pill bg-primary px-3 py-2">
+              <i class="bi bi-geo-alt me-1"></i>1. Destination
+            </span>
+          </div>
+          <div class="text-muted align-self-center"><i class="bi bi-chevron-right"></i></div>
+          <div class="step-indicator" id="step-2">
+            <span class="badge rounded-pill bg-secondary px-3 py-2" id="step2Badge">
+              <i class="bi bi-calendar3 me-1"></i>2. Dates
+            </span>
+          </div>
+          <div class="text-muted align-self-center"><i class="bi bi-chevron-right"></i></div>
+          <div class="step-indicator" id="step-3">
+            <span class="badge rounded-pill bg-secondary px-3 py-2" id="step3Badge">
+              <i class="bi bi-wallet2 me-1"></i>3. Budget & Preferences
+            </span>
+          </div>
+        </div>
+
+        <form id="tripForm" novalidate>
+
+          <!-- STEP 1: Destination -->
+          <div id="panel1" class="form-card card p-4 mb-4">
+            <h5 class="fw-bold mb-4"><i class="bi bi-geo-alt-fill text-danger me-2"></i>Destination</h5>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Departing from <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="origin"
+                     placeholder="e.g. Bucharest, Romania" required />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Destination <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="destination"
+                     placeholder="e.g. Tokyo, Japan" required />
+              <div class="mt-2 d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary dest-suggest"
+                        onclick="setDest('Tokyo, Japan')">🇯🇵 Tokyo</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary dest-suggest"
+                        onclick="setDest('Paris, France')">🇫🇷 Paris</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary dest-suggest"
+                        onclick="setDest('Bali, Indonesia')">🇮🇩 Bali</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary dest-suggest"
+                        onclick="setDest('New York, USA')">🇺🇸 New York</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary dest-suggest"
+                        onclick="setDest('Rome, Italy')">🇮🇹 Rome</button>
+              </div>
+            </div>
+
+            <div class="mb-0">
+              <label class="form-label fw-semibold">Free description (optional)</label>
+              <textarea class="form-control" id="description" rows="3"
+                        placeholder="e.g. I want a 7-day vacation in Tokyo focused on gastronomy and culture, budget ~$2500..."></textarea>
+              <small class="text-muted">The AI will use this description to personalize the itinerary</small>
+            </div>
+          </div>
+
+          <!-- STEP 2: Dates & Travelers -->
+          <div id="panel2" class="form-card card p-4 mb-4">
+            <h5 class="fw-bold mb-4"><i class="bi bi-calendar3 text-primary me-2"></i>Dates & Travelers</h5>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Departure Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" id="startDate" required />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Return Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" id="endDate" required />
+              </div>
+            </div>
+
+            <div id="durationInfo" class="alert alert-info py-2 small d-none">
+              <i class="bi bi-info-circle me-1"></i>
+              <span id="durationText"></span>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Adults</label>
+                <div class="input-group">
+                  <button type="button" class="btn btn-outline-secondary" onclick="changeCount('adults', -1)">−</button>
+                  <input type="number" class="form-control text-center" id="adults" value="2" min="1" max="20" readonly />
+                  <button type="button" class="btn btn-outline-secondary" onclick="changeCount('adults', 1)">+</button>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Children</label>
+                <div class="input-group">
+                  <button type="button" class="btn btn-outline-secondary" onclick="changeCount('children', -1)">−</button>
+                  <input type="number" class="form-control text-center" id="children" value="0" min="0" max="10" readonly />
+                  <button type="button" class="btn btn-outline-secondary" onclick="changeCount('children', 1)">+</button>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Trip Type</label>
+                <select class="form-select" id="tripType">
+                  <option value="leisure">Leisure</option>
+                  <option value="adventure">Adventure</option>
+                  <option value="business">Business</option>
+                  <option value="honeymoon">Honeymoon</option>
+                  <option value="family">Family</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 3: Budget & Preferences -->
+          <div id="panel3" class="form-card card p-4 mb-4">
+            <h5 class="fw-bold mb-4"><i class="bi bi-wallet2 text-success me-2"></i>Budget & Preferences</h5>
+
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Total Budget (USD)</label>
+                <div class="input-group">
+                  <span class="input-group-text">$</span>
+                  <input type="number" class="form-control" id="budget"
+                         placeholder="e.g. 3000" min="0" />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Budget Level</label>
+                <select class="form-select" id="budgetLevel">
+                  <option value="budget">Budget (under $50/day)</option>
+                  <option value="moderate" selected>Moderate ($50–$150/day)</option>
+                  <option value="comfortable">Comfortable ($150–$300/day)</option>
+                  <option value="luxury">Luxury (over $300/day)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Travel Preferences</label>
+              <p class="small text-muted mb-2">Select everything that interests you</p>
+              <div class="d-flex flex-wrap gap-2">
+                <span class="pref-tag selected" data-pref="culture"><i class="bi bi-bank me-1"></i>Culture</span>
+                <span class="pref-tag" data-pref="food"><i class="bi bi-egg-fried me-1"></i>Gastronomy</span>
+                <span class="pref-tag selected" data-pref="nature"><i class="bi bi-tree me-1"></i>Nature</span>
+                <span class="pref-tag" data-pref="adventure"><i class="bi bi-lightning me-1"></i>Adventure</span>
+                <span class="pref-tag" data-pref="beach"><i class="bi bi-umbrella me-1"></i>Beach</span>
+                <span class="pref-tag" data-pref="nightlife"><i class="bi bi-moon-stars me-1"></i>Nightlife</span>
+                <span class="pref-tag" data-pref="shopping"><i class="bi bi-bag me-1"></i>Shopping</span>
+                <span class="pref-tag" data-pref="history"><i class="bi bi-hourglass me-1"></i>History</span>
+                <span class="pref-tag" data-pref="photography"><i class="bi bi-camera me-1"></i>Photography</span>
+                <span class="pref-tag" data-pref="wellness"><i class="bi bi-heart-pulse me-1"></i>Wellness</span>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Transport Preferences</label>
+              <div class="d-flex flex-wrap gap-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="transFlight" checked />
+                  <label class="form-check-label" for="transFlight">
+                    <i class="bi bi-airplane me-1"></i>Flight
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="transRail" />
+                  <label class="form-check-label" for="transRail">
+                    <i class="bi bi-train-front me-1"></i>Train
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="transCar" />
+                  <label class="form-check-label" for="transCar">
+                    <i class="bi bi-car-front me-1"></i>Car
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-0">
+              <label class="form-label fw-semibold">Accommodation Style</label>
+              <div class="row g-2">
+                <div class="col-6 col-md-3">
+                  <input type="radio" class="btn-check" name="accommodation" id="accHotel" value="hotel" checked />
+                  <label class="btn btn-outline-primary w-100" for="accHotel">
+                    <i class="bi bi-building d-block fs-4 mb-1"></i>Hotel
+                  </label>
+                </div>
+                <div class="col-6 col-md-3">
+                  <input type="radio" class="btn-check" name="accommodation" id="accAirbnb" value="airbnb" />
+                  <label class="btn btn-outline-primary w-100" for="accAirbnb">
+                    <i class="bi bi-house d-block fs-4 mb-1"></i>Airbnb
+                  </label>
+                </div>
+                <div class="col-6 col-md-3">
+                  <input type="radio" class="btn-check" name="accommodation" id="accHostel" value="hostel" />
+                  <label class="btn btn-outline-primary w-100" for="accHostel">
+                    <i class="bi bi-people d-block fs-4 mb-1"></i>Hostel
+                  </label>
+                </div>
+                <div class="col-6 col-md-3">
+                  <input type="radio" class="btn-check" name="accommodation" id="accResort" value="resort" />
+                  <label class="btn btn-outline-primary w-100" for="accResort">
+                    <i class="bi bi-stars d-block fs-4 mb-1"></i>Resort
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <div class="d-flex justify-content-between align-items-center">
+            <a href="trips.html" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left me-2"></i>Back
+            </a>
+            <button type="submit" class="btn btn-success btn-lg px-5" id="submitBtn">
+              <i class="bi bi-robot me-2"></i>Generate AI Itinerary
+            </button>
+          </div>
+
+        </form>
+
+        <!-- Success Message (hidden by default) -->
+        <div id="successMsg" class="alert alert-success mt-4 d-none">
+          <h5 class="alert-heading"><i class="bi bi-check-circle me-2"></i>Itinerary generated successfully!</h5>
+          <p class="mb-2">Your itinerary has been created. Redirecting to details...</p>
+          <div class="progress">
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                 id="progressBar" style="width: 0%"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer>
+    <div class="container text-center">
+      <p class="small opacity-50 mb-0">&copy; 2026 TravelPlanner. PAW Project – University.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // Set minimum dates
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('startDate').setAttribute('min', today);
+    document.getElementById('endDate').setAttribute('min', today);
+
+    // Date change → show duration
+    ['startDate', 'endDate'].forEach(id => {
+      document.getElementById(id).addEventListener('change', updateDuration);
+    });
+
+    function updateDuration() {
+      const s = document.getElementById('startDate').value;
+      const e = document.getElementById('endDate').value;
+      const info = document.getElementById('durationInfo');
+      const text = document.getElementById('durationText');
+      if (s && e) {
+        const days = Math.ceil((new Date(e) - new Date(s)) / 86400000);
+        if (days > 0) {
+          text.textContent = `Duration: ${days} ${days === 1 ? 'day' : 'days'}`;
+          info.classList.remove('d-none');
+          document.getElementById('endDate').setAttribute('min', s);
+        } else {
+          info.classList.add('d-none');
+        }
+      }
+    }
+
+    function changeCount(field, delta) {
+      const el = document.getElementById(field);
+      const min = parseInt(el.getAttribute('min'));
+      const max = parseInt(el.getAttribute('max'));
+      const val = parseInt(el.value) + delta;
+      if (val >= min && val <= max) el.value = val;
+    }
+
+    function setDest(dest) {
+      document.getElementById('destination').value = dest;
+    }
+
+    // Init preference tags
+    document.addEventListener('DOMContentLoaded', initPrefTags);
+
+    // Form submit
+    document.getElementById('tripForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      if (!this.checkValidity()) {
+        this.classList.add('was-validated');
+        return;
+      }
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Generating itinerary...';
+
+      document.getElementById('successMsg').classList.remove('d-none');
+      let w = 0;
+      const bar = document.getElementById('progressBar');
+      const iv = setInterval(() => {
+        w += 4;
+        bar.style.width = w + '%';
+        if (w >= 100) {
+          clearInterval(iv);
+          window.location.href = 'trip-details.html';
+        }
+      }, 80);
+    });
+  </script>
+</body>
+</html>

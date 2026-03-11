@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TravelPlanner – Plan Your Adventure</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="index.html">
+        <i class="bi bi-airplane-fill me-2"></i>TravelPlanner
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="explore.html">Explore</a></li>
+          <li class="nav-item"><a class="nav-link" href="trips.html">My Trips</a></li>
+          <li class="nav-item"><a class="nav-link" href="budget.html">Budget</a></li>
+        </ul>
+        <div id="themeToggleWrap" class="d-flex align-items-center"></div>
+        <ul class="navbar-nav" id="navUser"></ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero-section">
+    <div class="container text-center">
+      <span class="hero-badge"><i class="bi bi-stars me-1"></i>AI Planning · Global Destinations</span>
+      <h1 class="mb-4">
+        Plan your <span class="text-info">perfect adventure</span><br/>in just a few minutes
+      </h1>
+      <p class="lead mb-5 mx-auto" style="max-width:580px;">
+        TravelPlanner offers personalized itineraries, flight and hotel recommendations,
+        budget tracking and interactive maps – all in one place.
+      </p>
+      <div class="d-flex flex-wrap gap-3 justify-content-center">
+        <a href="new-trip.html" class="btn btn-success btn-lg px-4">
+          <i class="bi bi-plus-circle me-2"></i>Plan a Trip
+        </a>
+        <a href="trips.html" class="btn btn-outline-light btn-lg px-4">
+          <i class="bi bi-suitcase-lg me-2"></i>My Trips
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FEATURES ===== -->
+  <section class="py-5">
+    <div class="container">
+      <h2 class="text-center fw-bold mb-2">Why TravelPlanner?</h2>
+      <p class="text-center text-muted mb-5">Everything you need for a stress-free trip</p>
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="feature-card h-100">
+            <div class="feature-icon bg-primary bg-opacity-10 text-primary">
+              <i class="bi bi-robot"></i>
+            </div>
+            <h5 class="fw-bold mb-2">AI-Assisted Planning</h5>
+            <p class="text-muted mb-0">
+              Describe your trip in your own words and let the AI generate a complete itinerary
+              with flights, hotels, activities and restaurants.
+            </p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-card h-100">
+            <div class="feature-icon bg-success bg-opacity-10 text-success">
+              <i class="bi bi-globe2"></i>
+            </div>
+            <h5 class="fw-bold mb-2">Global Destinations</h5>
+            <p class="text-muted mb-0">
+              Access thousands of destinations worldwide with real-time data
+              on flights, prices and weather conditions.
+            </p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-card h-100">
+            <div class="feature-icon bg-warning bg-opacity-10 text-warning">
+              <i class="bi bi-wallet2"></i>
+            </div>
+            <h5 class="fw-bold mb-2">Full Budget Control</h5>
+            <p class="text-muted mb-0">
+              Track expenses by category, compare estimated vs. actual budget
+              and avoid financial surprises during your trip.
+            </p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-card h-100">
+            <div class="feature-icon bg-info bg-opacity-10 text-info">
+              <i class="bi bi-map"></i>
+            </div>
+            <h5 class="fw-bold mb-2">Interactive Maps</h5>
+            <p class="text-muted mb-0">
+              Visualize every point of interest on the map, with day-by-day routes
+              and activity clusters for easy navigation.
+            </p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-card h-100">
+            <div class="feature-icon bg-danger bg-opacity-10 text-danger">
+              <i class="bi bi-calendar3"></i>
+            </div>
+            <h5 class="fw-bold mb-2">Day-by-Day Itinerary</h5>
+            <p class="text-muted mb-0">
+              Detailed daily organization with schedules, durations and transport suggestions
+              between attractions, tailored to your preferences.
+            </p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-card h-100">
+            <div class="feature-icon bg-secondary bg-opacity-10 text-secondary">
+              <i class="bi bi-cloud-sun"></i>
+            </div>
+            <h5 class="fw-bold mb-2">Weather Forecasts</h5>
+            <p class="text-muted mb-0">
+              Integration with real-time weather data to plan activities
+              based on atmospheric conditions at your destination.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== POPULAR DESTINATIONS ===== -->
+  <section class="py-5 bg-white">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 class="fw-bold mb-1">Popular Destinations</h2>
+          <p class="text-muted mb-0">The most searched places on TravelPlanner</p>
+        </div>
+        <a href="explore.html" class="btn btn-outline-primary">
+          All Destinations <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+      </div>
+      <div class="row g-4">
+        <!-- Tokyo -->
+        <div class="col-6 col-md-3">
+          <div class="destination-card position-relative">
+            <img src="https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&q=80"
+                 class="dest-img" alt="Tokyo" />
+            <div class="dest-overlay">
+              <h5>Tokyo</h5>
+              <small><i class="bi bi-geo-alt-fill me-1"></i>Japan</small>
+            </div>
+          </div>
+        </div>
+        <!-- Paris -->
+        <div class="col-6 col-md-3">
+          <div class="destination-card position-relative">
+            <img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&q=80"
+                 class="dest-img" alt="Paris" />
+            <div class="dest-overlay">
+              <h5>Paris</h5>
+              <small><i class="bi bi-geo-alt-fill me-1"></i>France</small>
+            </div>
+          </div>
+        </div>
+        <!-- Bali -->
+        <div class="col-6 col-md-3">
+          <div class="destination-card position-relative">
+            <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=400&q=80"
+                 class="dest-img" alt="Bali" />
+            <div class="dest-overlay">
+              <h5>Bali</h5>
+              <small><i class="bi bi-geo-alt-fill me-1"></i>Indonesia</small>
+            </div>
+          </div>
+        </div>
+        <!-- New York -->
+        <div class="col-6 col-md-3">
+          <div class="destination-card position-relative">
+            <img src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=400&q=80"
+                 class="dest-img" alt="New York" />
+            <div class="dest-overlay">
+              <h5>New York</h5>
+              <small><i class="bi bi-geo-alt-fill me-1"></i>USA</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== STATS ===== -->
+  <section class="py-5" style="background: linear-gradient(135deg, #0d6efd11, #20c99711);">
+    <div class="container">
+      <div class="row g-4 text-center">
+        <div class="col-6 col-md-3">
+          <div class="stat-card">
+            <div class="stat-value text-primary">12,400+</div>
+            <div class="stat-label">Trips Planned</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card">
+            <div class="stat-value text-success">180+</div>
+            <div class="stat-label">Countries Available</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card">
+            <div class="stat-value text-warning">4.9<small class="fs-4">/5</small></div>
+            <div class="stat-label">User Rating</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card">
+            <div class="stat-value text-info">8,900+</div>
+            <div class="stat-label">Active Users</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CTA ===== -->
+  <section class="py-5 bg-primary text-white text-center">
+    <div class="container">
+      <h2 class="fw-bold mb-3">Ready to Start Your Adventure?</h2>
+      <p class="lead mb-4 opacity-85">
+        Create a free account and plan your first trip in less than 5 minutes.
+      </p>
+      <a href="new-trip.html" class="btn btn-light btn-lg px-5">
+        <i class="bi bi-rocket-takeoff me-2"></i>Start Planning
+      </a>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer>
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="footer-brand mb-2">
+            <i class="bi bi-airplane-fill me-2 text-info"></i>TravelPlanner
+          </div>
+          <p class="small opacity-75">
+            Your AI-powered travel planning platform.
+            Discover, plan and live unforgettable experiences.
+          </p>
+        </div>
+        <div class="col-md-2">
+          <h6 class="text-white fw-semibold mb-3">Navigation</h6>
+          <ul class="list-unstyled small">
+            <li class="mb-2"><a href="index.html">Home</a></li>
+            <li class="mb-2"><a href="explore.html">Explore</a></li>
+            <li class="mb-2"><a href="trips.html">My Trips</a></li>
+            <li class="mb-2"><a href="budget.html">Budget</a></li>
+          </ul>
+        </div>
+        <div class="col-md-2">
+          <h6 class="text-white fw-semibold mb-3">Account</h6>
+          <ul class="list-unstyled small">
+            <li class="mb-2"><a href="profile.html">Profile</a></li>
+            <li class="mb-2"><a href="login.html">Login</a></li>
+            <li class="mb-2"><a href="register.html">Register</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h6 class="text-white fw-semibold mb-3">Contact</h6>
+          <p class="small opacity-75 mb-1"><i class="bi bi-envelope me-2"></i>contact@travelplanner.com</p>
+          <p class="small opacity-75"><i class="bi bi-geo-alt me-2"></i>Bucharest, Romania</p>
+        </div>
+      </div>
+      <hr class="border-secondary mt-4" />
+      <p class="text-center small opacity-50 mb-0">
+        &copy; 2026 TravelPlanner. PAW Project – University.
+      </p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

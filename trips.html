@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Trips – TravelPlanner</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="index.html">
+        <i class="bi bi-airplane-fill me-2"></i>TravelPlanner
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="explore.html">Explore</a></li>
+          <li class="nav-item"><a class="nav-link" href="trips.html">My Trips</a></li>
+          <li class="nav-item"><a class="nav-link" href="budget.html">Budget</a></li>
+        </ul>
+        <div id="themeToggleWrap" class="d-flex align-items-center"></div>
+        <ul class="navbar-nav" id="navUser"></ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== PAGE HEADER ===== -->
+  <div class="page-header">
+    <div class="container d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div>
+        <h1><i class="bi bi-suitcase-lg me-2"></i>My Trips</h1>
+        <p>Manage and track all your adventures</p>
+      </div>
+      <a href="new-trip.html" class="btn btn-light fw-semibold">
+        <i class="bi bi-plus-lg me-2"></i>New Trip
+      </a>
+    </div>
+  </div>
+
+  <main class="container pb-5">
+
+    <!-- ===== FILTERS & SEARCH ===== -->
+    <div class="bg-white rounded-3 shadow-sm p-3 mb-4 d-flex flex-wrap gap-3 align-items-center">
+      <div class="flex-grow-1">
+        <div class="input-group">
+          <span class="input-group-text bg-transparent border-end-0">
+            <i class="bi bi-search text-muted"></i>
+          </span>
+          <input type="text" id="searchInput" class="form-control border-start-0"
+                 placeholder="Search by destination or name..." oninput="filterTrips()" />
+        </div>
+      </div>
+      <select id="statusFilter" class="form-select" style="width:auto;" onchange="filterTrips()">
+        <option value="">All Statuses</option>
+        <option value="draft">Draft</option>
+        <option value="planning">Planning</option>
+        <option value="confirmed">Confirmed</option>
+        <option value="completed">Completed</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+      <select id="sortSelect" class="form-select" style="width:auto;" onchange="filterTrips()">
+        <option value="date_desc">Most Recent</option>
+        <option value="date_asc">Oldest First</option>
+        <option value="name">Alphabetical</option>
+      </select>
+    </div>
+
+    <!-- ===== TRIPS GRID ===== -->
+    <div class="row g-4" id="tripsGrid"></div>
+
+    <!-- ===== EMPTY STATE ===== -->
+    <div id="emptyState" class="empty-state d-none">
+      <i class="bi bi-suitcase"></i>
+      <h4 class="fw-bold mb-2">No trips found</h4>
+      <p class="text-muted mb-4">There are no trips matching the selected filters.</p>
+      <a href="new-trip.html" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-2"></i>Plan Your First Trip
+      </a>
+    </div>
+
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer>
+    <div class="container text-center">
+      <p class="small opacity-50 mb-0">
+        &copy; 2026 TravelPlanner. PAW Project – University.
+      </p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // ── Mock trip data ──────────────────────────────────────────────
+    const TRIPS = [
+      {
+        id: 1,
+        name: 'Japan Adventure',
+        destination: 'Tokyo, Japan',
+        startDate: '2025-04-10',
+        endDate: '2025-04-20',
+        status: 'confirmed',
+        budget: 3500,
+        spent: 2100,
+        travelers: 2,
+        img: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&q=80'
+      },
+      {
+        id: 2,
+        name: 'Romantic Paris',
+        destination: 'Paris, France',
+        startDate: '2025-06-15',
+        endDate: '2025-06-22',
+        status: 'planning',
+        budget: 2000,
+        spent: 0,
+        travelers: 2,
+        img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&q=80'
+      },
+      {
+        id: 3,
+        name: 'Bali Relaxation',
+        destination: 'Bali, Indonesia',
+        startDate: '2024-12-01',
+        endDate: '2024-12-14',
+        status: 'completed',
+        budget: 2800,
+        spent: 2650,
+        travelers: 1,
+        img: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=400&q=80'
+      },
+      {
+        id: 4,
+        name: 'New York City Vibes',
+        destination: 'New York, USA',
+        startDate: '2025-09-05',
+        endDate: '2025-09-12',
+        status: 'draft',
+        budget: 4500,
+        spent: 0,
+        travelers: 3,
+        img: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=400&q=80'
+      },
+      {
+        id: 5,
+        name: 'Kenya Safari',
+        destination: 'Nairobi, Kenya',
+        startDate: '2025-07-20',
+        endDate: '2025-07-30',
+        status: 'planning',
+        budget: 5000,
+        spent: 1200,
+        travelers: 4,
+        img: 'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=400&q=80'
+      },
+      {
+        id: 6,
+        name: 'Barcelona & Costa Brava',
+        destination: 'Barcelona, Spain',
+        startDate: '2024-08-10',
+        endDate: '2024-08-18',
+        status: 'completed',
+        budget: 1800,
+        spent: 1750,
+        travelers: 2,
+        img: 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=400&q=80'
+      }
+    ];
+
+    function buildTripCard(trip) {
+      const days = Math.ceil(
+        (new Date(trip.endDate) - new Date(trip.startDate)) / (1000 * 60 * 60 * 24)
+      );
+      const pct = trip.budget > 0 ? Math.min(100, Math.round((trip.spent / trip.budget) * 100)) : 0;
+      const badgeColor = { draft:'secondary', planning:'primary', confirmed:'success', completed:'info', cancelled:'danger' }[trip.status] || 'secondary';
+      const statusLbl = { draft:'Draft', planning:'Planning', confirmed:'Confirmed', completed:'Completed', cancelled:'Cancelled' }[trip.status] || trip.status;
+
+      return `
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="card tp-card h-100">
+            <img src="${trip.img}" class="card-img-top" alt="${trip.destination}"
+                 style="height:180px;object-fit:cover;" onerror="this.src='https://placehold.co/400x180/0d6efd/white?text=Destination'" />
+            <div class="card-body d-flex flex-column">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h5 class="card-title fw-bold mb-0">${trip.name}</h5>
+                <span class="badge bg-${badgeColor} ms-2">${statusLbl}</span>
+              </div>
+              <p class="text-muted small mb-2">
+                <i class="bi bi-geo-alt-fill me-1 text-danger"></i>${trip.destination}
+              </p>
+              <div class="d-flex gap-3 text-muted small mb-3">
+                <span><i class="bi bi-calendar3 me-1"></i>${formatDate(trip.startDate)}</span>
+                <span><i class="bi bi-clock me-1"></i>${days} days</span>
+                <span><i class="bi bi-people me-1"></i>${trip.travelers}</span>
+              </div>
+              <!-- Budget progress -->
+              <div class="mb-3">
+                <div class="d-flex justify-content-between small mb-1">
+                  <span class="text-muted">Budget used</span>
+                  <span class="fw-semibold">${pct}%</span>
+                </div>
+                <div class="budget-bar-wrap">
+                  <div class="budget-bar-fill bg-${pct > 90 ? 'danger' : pct > 70 ? 'warning' : 'success'}"
+                       style="width:${pct}%"></div>
+                </div>
+                <div class="d-flex justify-content-between small mt-1 text-muted">
+                  <span>${formatCurrency(trip.spent)}</span>
+                  <span>${formatCurrency(trip.budget)}</span>
+                </div>
+              </div>
+              <a href="trip-details.html?id=${trip.id}"
+                 class="btn btn-outline-primary btn-sm mt-auto">
+                <i class="bi bi-eye me-1"></i>View Details
+              </a>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function filterTrips() {
+      const q      = document.getElementById('searchInput').value.toLowerCase();
+      const status = document.getElementById('statusFilter').value;
+      const sort   = document.getElementById('sortSelect').value;
+
+      let filtered = TRIPS.filter(t => {
+        const matchQ = t.name.toLowerCase().includes(q) || t.destination.toLowerCase().includes(q);
+        const matchS = !status || t.status === status;
+        return matchQ && matchS;
+      });
+
+      if (sort === 'date_asc') filtered.sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
+      else if (sort === 'date_desc') filtered.sort((a,b) => new Date(b.startDate) - new Date(a.startDate));
+      else if (sort === 'name') filtered.sort((a,b) => a.name.localeCompare(b.name));
+
+      const grid  = document.getElementById('tripsGrid');
+      const empty = document.getElementById('emptyState');
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '';
+        empty.classList.remove('d-none');
+      } else {
+        grid.innerHTML = filtered.map(buildTripCard).join('');
+        empty.classList.add('d-none');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', filterTrips);
+  </script>
+</body>
+</html>

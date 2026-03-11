@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Specificații aplicație – TravelPlanner</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <style>
+    :root { --primary: #0d6efd; --accent: #20c997; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; color: #212529; }
+    .doc-header {
+      background: linear-gradient(135deg, #1a1a2e, #0f3460);
+      color: white; padding: 3rem 0;
+    }
+    .section-title {
+      border-left: 4px solid var(--primary);
+      padding-left: 1rem; margin-bottom: 1.5rem;
+      font-weight: 700;
+    }
+    .toc-link { text-decoration: none; color: var(--primary); }
+    .toc-link:hover { text-decoration: underline; }
+    .req-table th { background-color: #f8f9fa; }
+    .priority-high   { color: #dc3545; font-weight: 600; }
+    .priority-medium { color: #fd7e14; font-weight: 600; }
+    .priority-low    { color: #6c757d; }
+    .tech-badge {
+      display: inline-block;
+      background: #e9ecef; border-radius: 6px;
+      padding: 3px 10px; font-size: 0.85rem;
+      font-family: monospace; margin: 2px;
+    }
+    .page-row:hover { background: #f8f9fa; }
+    @media print {
+      .no-print { display: none !important; }
+      body { font-size: 12pt; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="doc-header">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div>
+          <div class="text-info mb-2" style="font-size:0.9rem;">
+            <i class="bi bi-file-earmark-text me-2"></i>Document de specificații – Proiect PAW
+          </div>
+          <h1 class="fw-bold mb-2">
+            <i class="bi bi-airplane-fill me-3" style="color:#20c997;"></i>TravelPlanner
+          </h1>
+          <p class="opacity-85 mb-0 lead">
+            Aplicație web pentru planificarea călătoriilor
+          </p>
+        </div>
+        <div class="text-end small opacity-75">
+          <div><strong>Versiune:</strong> 1.0</div>
+          <div><strong>Data:</strong> Martie 2026</div>
+          <div><strong>Stivă:</strong> HTML/CSS/JS + ASP.NET Core + Supabase</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container py-5">
+    <div class="row">
+
+      <!-- Table of Contents (sticky sidebar) -->
+      <div class="col-lg-3 no-print mb-4">
+        <div class="sticky-top pt-3" style="top:80px;">
+          <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white fw-bold">
+              <i class="bi bi-list-ul me-2"></i>Cuprins
+            </div>
+            <div class="card-body p-0">
+              <ul class="list-group list-group-flush small">
+                <li class="list-group-item"><a class="toc-link" href="#s1">1. Prezentare generală</a></li>
+                <li class="list-group-item"><a class="toc-link" href="#s2">2. Stivă tehnologică</a></li>
+                <li class="list-group-item"><a class="toc-link" href="#s3">3. Arhitectura aplicației</a></li>
+                <li class="list-group-item"><a class="toc-link" href="#s4">4. Pagini web</a></li>
+                <li class="list-group-item"><a class="toc-link" href="#s5">5. Funcționalități</a></li>
+                <li class="list-group-item"><a class="toc-link" href="#s6">6. Modele de date</a></li>
+                <li class="list-group-item"><a class="toc-link" href="#s7">7. API Endpoints</a></li>
+                <li class="list-group-item"><a class="toc-link" href="#s8">8. Autentificare & securitate</a></li>
+                <li class="list-group-item"><a class="toc-link" href="#s9">9. Cerințe non-funcționale</a></li>
+                <li class="list-group-item"><a class="toc-link" href="#s10">10. Structura proiectului</a></li>
+                <li class="list-group-item"><a class="toc-link" href="#s11">11. Ce a fost implementat</a></li>
+              </ul>
+            </div>
+          </div>
+          <a href="../index.html" class="btn btn-outline-primary btn-sm w-100 mt-3">
+            <i class="bi bi-arrow-left me-2"></i>Înapoi la aplicație
+          </a>
+        </div>
+      </div>
+
+      <!-- Main content -->
+      <div class="col-lg-9">
+
+        <!-- ====================================================
+             1. PREZENTARE GENERALĂ
+             ==================================================== -->
+        <section id="s1" class="mb-5">
+          <h2 class="section-title">1. Prezentare generală</h2>
+
+          <h5 class="fw-bold">1.1 Descrierea aplicației</h5>
+          <p>
+            <strong>TravelPlanner</strong> este o aplicație web de planificare a călătoriilor care permite
+            utilizatorilor să creeze, gestioneze și urmărească itinerarii complete pentru destinații globale.
+            Aplicația oferă funcționalități de căutare a zborurilor, cazărilor și activităților,
+            recomandări inteligente de restaurante și experiențe culinare locale, urmărire
+            a bugetului pe categorii, vizualizare interactivă a itinerariului și gestionarea profilului
+            utilizatorului.
+          </p>
+          <p>
+            Inspirată din proiectul <em>Travel Companion</em>, aplicația este reconstruită pe o stivă
+            tehnologică accesibilă: frontend HTML/CSS/JavaScript cu Bootstrap 5, backend ASP.NET Core
+            și bază de date PostgreSQL hospedată pe Supabase, renunțând la dependențele de framework-uri JavaScript complexe
+            în favoarea compatibilității și simplității.
+          </p>
+
+          <h5 class="fw-bold mt-4">1.2 Obiective principale</h5>
+          <ul>
+            <li>Planificarea completă a unei călătorii (destinație, date, buget, activități, cazare)</li>
+            <li>Vizualizarea itinerariului zi cu zi cu timeline interactiv</li>
+            <li>Descoperirea de restaurante și specialități culinare locale pentru fiecare destinație</li>
+            <li>Urmărirea în timp real a bugetului pe categorii de cheltuieli</li>
+            <li>Explorarea și descoperirea de noi destinații cu filtrare avansată</li>
+            <li>Gestionarea completă a profilului utilizatorului și preferințelor</li>
+          </ul>
+
+          <h5 class="fw-bold mt-4">1.3 Utilizatori țintă</h5>
+          <ul>
+            <li><strong>Turiști individuali</strong> – călătorii solo sau în cuplu</li>
+            <li><strong>Familii</strong> – planificarea vacanțelor cu copii</li>
+            <li><strong>Groupuri de prieteni</strong> – organizarea călătoriilor de grup</li>
+            <li><strong>Călători de business</strong> – gestionarea deplasărilor profesionale</li>
+          </ul>
+        </section>
+
+        <!-- ====================================================
+             2. STIVĂ TEHNOLOGICĂ
+             ==================================================== -->
+        <section id="s2" class="mb-5">
+          <h2 class="section-title">2. Stivă tehnologică</h2>
+
+          <div class="row g-4">
+            <div class="col-md-6">
+              <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-primary text-white fw-bold">
+                  <i class="bi bi-globe me-2"></i>Frontend
+                </div>
+                <div class="card-body">
+                  <table class="table table-sm mb-0">
+                    <tr><td class="fw-semibold">Limbaj</td><td>HTML5, CSS3, JavaScript (ES6+)</td></tr>
+                    <tr><td class="fw-semibold">Framework CSS</td><td>Bootstrap 5.3</td></tr>
+                    <tr><td class="fw-semibold">Iconițe</td><td>Bootstrap Icons 1.11</td></tr>
+                    <tr><td class="fw-semibold">Fonturi</td><td>Segoe UI (sistem)</td></tr>
+                    <tr><td class="fw-semibold">Stocare locală</td><td>localStorage (sesiune user)</td></tr>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-success text-white fw-bold">
+                  <i class="bi bi-server me-2"></i>Backend
+                </div>
+                <div class="card-body">
+                  <table class="table table-sm mb-0">
+                    <tr><td class="fw-semibold">Framework</td><td>ASP.NET Core 9.0</td></tr>
+                    <tr><td class="fw-semibold">Limbaj</td><td>C# 13</td></tr>
+                    <tr><td class="fw-semibold">API</td><td>REST (Web API Controllers)</td></tr>
+                    <tr><td class="fw-semibold">Autentificare</td><td>JWT Bearer Tokens</td></tr>
+                    <tr><td class="fw-semibold">ORM</td><td>Entity Framework Core</td></tr>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-warning fw-bold">
+                  <i class="bi bi-database me-2"></i>Bază de date
+                </div>
+                <div class="card-body">
+                  <table class="table table-sm mb-0">
+                    <tr><td class="fw-semibold">Platformă</td><td>Supabase (PostgreSQL hosted)</td></tr>
+                    <tr><td class="fw-semibold">SGBD</td><td>PostgreSQL 16 (via Supabase)</td></tr>
+                    <tr><td class="fw-semibold">Migrații</td><td>EF Core Migrations</td></tr>
+                    <tr><td class="fw-semibold">Caching</td><td>Redis (rezultate API externe)</td></tr>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-info text-white fw-bold">
+                  <i class="bi bi-cloud me-2"></i>API-uri externe (viitor)
+                </div>
+                <div class="card-body">
+                  <table class="table table-sm mb-0">
+                    <tr><td class="fw-semibold">Zboruri</td><td>Amadeus Flight API</td></tr>
+                    <tr><td class="fw-semibold">Hoteluri</td><td>Google Places API</td></tr>
+                    <tr><td class="fw-semibold">Restaurante</td><td>Google Places API</td></tr>
+                    <tr><td class="fw-semibold">Hărți</td><td>Google Maps JavaScript API</td></tr>
+                    <tr><td class="fw-semibold">Meteo</td><td>OpenWeather API</td></tr>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ====================================================
+             3. ARHITECTURA APLICAȚIEI
+             ==================================================== -->
+        <section id="s3" class="mb-5">
+          <h2 class="section-title">3. Arhitectura aplicației</h2>
+
+          <h5 class="fw-bold">3.1 Pattern arhitectural</h5>
+          <p>
+            Aplicația urmează pattern-ul <strong>MVC (Model-View-Controller)</strong> pe backend, cu o
+            separare clară între:
+          </p>
+          <ul>
+            <li><strong>Modele</strong> – entitățile de date (User, Trip, Itinerary, Budget)</li>
+            <li><strong>View-uri</strong> – paginile HTML statice servite din frontend</li>
+            <li><strong>Controller-e</strong> – endpoint-urile REST din ASP.NET Core Web API</li>
+          </ul>
+
+          <h5 class="fw-bold mt-4">3.2 Diagrama arhitecturală</h5>
+          <div class="bg-light rounded-3 p-4 font-monospace small">
+            <pre class="mb-0" style="overflow-x:auto;">
+┌─────────────────────────────────────────────────────┐
+│                   BROWSER (Client)                  │
+│   HTML/CSS/JS  →  Bootstrap 5  →  localStorage     │
+└──────────────────────┬──────────────────────────────┘
+                       │ HTTP/HTTPS (REST)
+                       ▼
+┌─────────────────────────────────────────────────────┐
+│              ASP.NET Core 8 Backend                 │
+│  ┌─────────────┐  ┌──────────────┐  ┌────────────┐ │
+│  │  Auth API   │  │  Trips API   │  │ Users API  │ │
+│  │ /api/auth   │  │ /api/trips   │  │ /api/users │ │
+│  └──────┬──────┘  └──────┬───────┘  └─────┬──────┘ │
+│         │                │                │        │
+│  ┌──────▼────────────────▼────────────────▼──────┐ │
+│  │              Service Layer                    │ │
+│  │  TripService / UserService / BudgetService  │ │
+│  │  RestaurantService (Google Places API)      │ │
+│  └──────────────────────┬────────────────────────┘ │
+│                         │ EF Core                  │
+│  ┌──────────────────────▼────────────────────────┐ │
+│  │          Supabase (PostgreSQL hosted)           │ │
+│  │  Users · Trips · Itineraries · Budgets        │ │
+│  └────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────┘
+            </pre>
+          </div>
+
+          <h5 class="fw-bold mt-4">3.3 Comunicarea frontend–backend</h5>
+          <p>
+            Frontend-ul comunică cu backend-ul exclusiv prin <strong>cereri HTTP asincrone (fetch API)</strong>
+            cu format JSON. Autentificarea se realizează prin <strong>JWT token</strong> stocat în
+            <code>localStorage</code>, trimis în header-ul <code>Authorization: Bearer &lt;token&gt;</code>
+            la fiecare cerere protejată.
+          </p>
+        </section>
+
+        <!-- ====================================================
+             4. PAGINI WEB
+             ==================================================== -->
+        <section id="s4" class="mb-5">
+          <h2 class="section-title">4. Pagini web</h2>
+          <p>
+            Aplicația conține <strong>9 pagini HTML</strong>, din care 7 pagini distincte de conținut
+            (conform cerinței) plus paginile de autentificare.
+          </p>
+
+          <div class="table-responsive">
+            <table class="table table-bordered req-table align-middle">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Fișier</th>
+                  <th>Titlu</th>
+                  <th>Descriere</th>
+                  <th>Autentificare necesară</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="page-row">
+                  <td>1</td>
+                  <td><code>index.html</code></td>
+                  <td><strong>Pagina principală</strong></td>
+                  <td>Hero cu CTA, funcționalități principale, destinații populare, statistici, footer</td>
+                  <td><span class="badge bg-secondary">Nu</span></td>
+                </tr>
+                <tr class="page-row">
+                  <td>2</td>
+                  <td><code>trips.html</code></td>
+                  <td><strong>Călătoriile mele</strong></td>
+                  <td>Dashboard cu lista călătoriilor, căutare, filtrare după status, card-uri cu progres buget</td>
+                  <td><span class="badge bg-success">Da</span></td>
+                </tr>
+                <tr class="page-row">
+                  <td>3</td>
+                  <td><code>new-trip.html</code></td>
+                  <td><strong>Planifică o călătorie</strong></td>
+                  <td>Formular în 3 pași: destinație → date și călători → buget și preferințe</td>
+                  <td><span class="badge bg-success">Da</span></td>
+                </tr>
+                <tr class="page-row">
+                  <td>4</td>
+                  <td><code>trip-details.html</code></td>
+                  <td><strong>Detalii călătorie</strong></td>
+                  <td>Itinerariu zi cu zi (timeline), tab-uri: zboruri, cazare, buget detaliat</td>
+                  <td><span class="badge bg-success">Da</span></td>
+                </tr>
+                <tr class="page-row">
+                  <td>5</td>
+                  <td><code>explore.html</code></td>
+                  <td><strong>Explorează destinații</strong></td>
+                  <td>Galerie de destinații cu căutare, filtrare pe continent/tip/buget, card-uri cu rating</td>
+                  <td><span class="badge bg-secondary">Nu</span></td>
+                </tr>
+                <tr class="page-row">
+                  <td>6</td>
+                  <td><code>budget.html</code></td>
+                  <td><strong>Buget & Cheltuieli</strong></td>
+                  <td>Urmărire buget pe categorii cu bare de progres, adăugare cheltuieli, tranzacții recente</td>
+                  <td><span class="badge bg-success">Da</span></td>
+                </tr>
+                <tr class="page-row">
+                  <td>7</td>
+                  <td><code>profile.html</code></td>
+                  <td><strong>Profilul meu</strong></td>
+                  <td>Editare date personale, preferințe de călătorie, schimbare parolă, statistici utilizator</td>
+                  <td><span class="badge bg-success">Da</span></td>
+                </tr>
+                <tr class="page-row table-secondary">
+                  <td>–</td>
+                  <td><code>login.html</code></td>
+                  <td><strong>Autentificare</strong></td>
+                  <td>Formular login cu email/parolă, opțiune social login (Google, Facebook)</td>
+                  <td><span class="badge bg-secondary">Nu</span></td>
+                </tr>
+                <tr class="page-row table-secondary">
+                  <td>–</td>
+                  <td><code>register.html</code></td>
+                  <td><strong>Înregistrare</strong></td>
+                  <td>Formular creare cont cu validare parolă, acceptare termeni</td>
+                  <td><span class="badge bg-secondary">Nu</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h5 class="fw-bold mt-4">4.1 Elemente comune tuturor paginilor (7 pagini distincte)</h5>
+          <p>Fiecare dintre cele 7 pagini de conținut conține obligatoriu:</p>
+          <ul>
+            <li>
+              <strong>Navbar Bootstrap</strong> – sticky, cu logo-ul aplicației, linkuri de navigare
+              (Acasă, Explorează, Călătoriile mele, Buget) și un dropdown de profil
+            </li>
+            <li>
+              <strong>Vizualizare utilizator conectat</strong> – în dropdown-ul de profil se afișează
+              <em>numele complet</em> și <em>adresa de email</em> a utilizatorului logat,
+              citite din <code>localStorage</code> prin <code>main.js</code>
+            </li>
+            <li>
+              <strong>Link către pagina de profil</strong> – accesibil din dropdown-ul utilizatorului
+              din navbar și din footer
+            </li>
+            <li>
+              <strong>Footer</strong> – cu linkuri rapide și informații de contact
+            </li>
+          </ul>
+        </section>
+
+        <!-- ====================================================
+             5. FUNCȚIONALITĂȚI
+             ==================================================== -->
+        <section id="s5" class="mb-5">
+          <h2 class="section-title">5. Funcționalități detaliate</h2>
+
+          <h5 class="fw-bold">5.1 Autentificare și gestiunea contului</h5>
+          <div class="table-responsive mb-4">
+            <table class="table table-sm table-bordered req-table">
+              <thead><tr><th>ID</th><th>Funcționalitate</th><th>Prioritate</th><th>Descriere</th></tr></thead>
+              <tbody>
+                <tr><td>F01</td><td>Înregistrare utilizator</td><td class="priority-high">Înaltă</td>
+                    <td>Creare cont cu prenume, nume, email și parolă; validare câmpuri; acceptare termeni</td></tr>
+                <tr><td>F02</td><td>Autentificare</td><td class="priority-high">Înaltă</td>
+                    <td>Login cu email/parolă; generare JWT; redirect la dashboard</td></tr>
+                <tr><td>F03</td><td>Deconectare</td><td class="priority-high">Înaltă</td>
+                    <td>Ștergere token JWT; redirect la pagina de login</td></tr>
+                <tr><td>F04</td><td>Editare profil</td><td class="priority-medium">Medie</td>
+                    <td>Actualizare nume, email, telefon, țară, bio; salvare în BD</td></tr>
+                <tr><td>F05</td><td>Schimbare parolă</td><td class="priority-medium">Medie</td>
+                    <td>Verificare parolă curentă; validare putere parolă nouă</td></tr>
+                <tr><td>F06</td><td>Preferințe utilizator</td><td class="priority-low">Scăzută</td>
+                    <td>Salvare preferințe (tip activități, stil cazare, buget mediu)</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h5 class="fw-bold">5.2 Gestionarea călătoriilor</h5>
+          <div class="table-responsive mb-4">
+            <table class="table table-sm table-bordered req-table">
+              <thead><tr><th>ID</th><th>Funcționalitate</th><th>Prioritate</th><th>Descriere</th></tr></thead>
+              <tbody>
+                <tr><td>F10</td><td>Creare călătorie</td><td class="priority-high">Înaltă</td>
+                    <td>Formular cu destinație, date, număr călători, buget, preferințe tip activitate și cazare</td></tr>
+                <tr><td>F11</td><td>Listare călătorii</td><td class="priority-high">Înaltă</td>
+                    <td>Dashboard cu toate călătoriile; paginare 20/pagină</td></tr>
+                <tr><td>F12</td><td>Căutare călătorii</td><td class="priority-high">Înaltă</td>
+                    <td>Filtrare în timp real după destinație sau nume; filtrare după status</td></tr>
+                <tr><td>F13</td><td>Detalii călătorie</td><td class="priority-high">Înaltă</td>
+                    <td>Vizualizare itinerariu zi cu zi, zboruri, cazare, buget detaliat pe categorii</td></tr>
+                <tr><td>F14</td><td>Editare călătorie</td><td class="priority-medium">Medie</td>
+                    <td>Modificare oricărui câmp după creare</td></tr>
+                <tr><td>F15</td><td>Ștergere călătorie</td><td class="priority-medium">Medie</td>
+                    <td>Ștergere cu confirmare; soft delete (status: anulată)</td></tr>
+                <tr><td>F16</td><td>Export PDF</td><td class="priority-low">Scăzută</td>
+                    <td>Generare document PDF cu itinerariul complet</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h5 class="fw-bold">5.3 Itinerariu și activități</h5>
+          <div class="table-responsive mb-4">
+            <table class="table table-sm table-bordered req-table">
+              <thead><tr><th>ID</th><th>Funcționalitate</th><th>Prioritate</th><th>Descriere</th></tr></thead>
+              <tbody>
+                <tr><td>F20</td><td>Timeline zi cu zi</td><td class="priority-high">Înaltă</td>
+                    <td>Afișare cronologică a evenimentelor: zbor, hotel, activitate, restaurant</td></tr>
+                <tr><td>F21</td><td>Selector de zile</td><td class="priority-high">Înaltă</td>
+                    <td>Navigare rapidă între zilele itinerariului cu butoane de selecție</td></tr>
+                <tr><td>F22</td><td>Tipuri de evenimente</td><td class="priority-medium">Medie</td>
+                    <td>4 tipuri: zbor (albastru), cazare (portocaliu), activitate (verde), mâncare (roșu)</td></tr>
+                <tr><td>F23</td><td>Adăugare activitate manuală</td><td class="priority-low">Scăzută</td>
+                    <td>Posibilitate de a adăuga activități manual în orice zi a itinerariului</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h5 class="fw-bold">5.4 Buget și cheltuieli</h5>
+          <div class="table-responsive mb-4">
+            <table class="table table-sm table-bordered req-table">
+              <thead><tr><th>ID</th><th>Funcționalitate</th><th>Prioritate</th><th>Descriere</th></tr></thead>
+              <tbody>
+                <tr><td>F30</td><td>Vizualizare buget pe categorii</td><td class="priority-high">Înaltă</td>
+                    <td>Bare de progres pentru 6 categorii: zboruri, cazare, activități, mâncare, transport, shopping</td></tr>
+                <tr><td>F31</td><td>Adăugare cheltuieli</td><td class="priority-high">Înaltă</td>
+                    <td>Formular rapid: descriere, sumă, categorie; actualizare instantă a graficelor</td></tr>
+                <tr><td>F32</td><td>Istoric tranzacții</td><td class="priority-medium">Medie</td>
+                    <td>Lista cheltuielilor înregistrate cu dată, categorie și sumă</td></tr>
+                <tr><td>F33</td><td>Sumar financiar</td><td class="priority-high">Înaltă</td>
+                    <td>Card-uri cu: buget total, cheltuit, rămas, procent utilizat</td></tr>
+                <tr><td>F34</td><td>Sfaturi buget</td><td class="priority-low">Scăzută</td>
+                    <td>Sugestii contextuale pentru economisire în funcție de destinație</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h5 class="fw-bold">5.5 Explorare destinații</h5>
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered req-table">
+              <thead><tr><th>ID</th><th>Funcționalitate</th><th>Prioritate</th><th>Descriere</th></tr></thead>
+              <tbody>
+                <tr><td>F40</td><td>Galerie destinații</td><td class="priority-high">Înaltă</td>
+                    <td>Grid responsive cu 12+ destinații globale, imagini, rating, preț estimat</td></tr>
+                <tr><td>F41</td><td>Filtrare destinații</td><td class="priority-high">Înaltă</td>
+                    <td>Filtre: continent, tip (cultural/plajă/aventură/city/natură), buget</td></tr>
+                <tr><td>F42</td><td>Căutare destinații</td><td class="priority-high">Înaltă</td>
+                    <td>Căutare text în timp real după nume țară sau descriere</td></tr>
+                <tr><td>F43</td><td>Planificare din explorare</td><td class="priority-medium">Medie</td>
+                    <td>Buton „Planifică" pre-completează destinația în formularul de creare</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h5 class="fw-bold">5.6 Restaurante și experiențe culinare</h5>
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered req-table">
+              <thead><tr><th>ID</th><th>Funcționalitate</th><th>Prioritate</th><th>Descriere</th></tr></thead>
+              <tbody>
+                <tr><td>F50</td><td>Căutare restaurante</td><td class="priority-high">Înaltă</td>
+                    <td>Căutare restaurante în proximitatea destinației pe bază de locație, rază și tip de bucătărie (Google Places API)</td></tr>
+                <tr><td>F51</td><td>Filtrare după bucătărie</td><td class="priority-high">Înaltă</td>
+                    <td>Filtrare restaurante după tipul de bucătărie (italiană, japoneză, franceză etc.) – suport pentru 60+ categorii</td></tr>
+                <tr><td>F52</td><td>Specialități locale</td><td class="priority-medium">Medie</td>
+                    <td>Descoperirea automată a specialităților culinare specifice destinației (ex: sushi la Tokyo, pizza la Roma)</td></tr>
+                <tr><td>F53</td><td>Comparare și clasament</td><td class="priority-medium">Medie</td>
+                    <td>Comparare restaurante cu scor multi-factor: distanță (40%), potrivire categorie (30%), specificitate bucătărie (20%), recunoaștere (10%)</td></tr>
+                <tr><td>F54</td><td>Cafenele și fast-food</td><td class="priority-low">Scăzută</td>
+                    <td>Căutare rapidă cafenele (rază 1 km) și opțiuni fast-food (rază 2 km) în apropierea locației curente</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ====================================================
+             6. MODELE DE DATE
+             ==================================================== -->
+        <section id="s6" class="mb-5">
+          <h2 class="section-title">6. Modele de date</h2>
+
+          <div class="row g-4">
+            <div class="col-md-6">
+              <div class="card border-0 shadow-sm">
+                <div class="card-header bg-dark text-white fw-bold"><i class="bi bi-person me-2"></i>User</div>
+                <div class="card-body p-0">
+                  <table class="table table-sm mb-0">
+                    <thead><tr><th>Câmp</th><th>Tip</th><th>Constrângeri</th></tr></thead>
+                    <tbody>
+                      <tr><td>Id</td><td>Guid</td><td>PK</td></tr>
+                      <tr><td>FirstName</td><td>string(50)</td><td>Required</td></tr>
+                      <tr><td>LastName</td><td>string(50)</td><td>Required</td></tr>
+                      <tr><td>Email</td><td>string(100)</td><td>Required, Unique</td></tr>
+                      <tr><td>PasswordHash</td><td>string</td><td>Required</td></tr>
+                      <tr><td>Country</td><td>string(50)</td><td>Nullable</td></tr>
+                      <tr><td>Bio</td><td>string(500)</td><td>Nullable</td></tr>
+                      <tr><td>CreatedAt</td><td>DateTime</td><td>Auto</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white fw-bold"><i class="bi bi-suitcase me-2"></i>Trip</div>
+                <div class="card-body p-0">
+                  <table class="table table-sm mb-0">
+                    <thead><tr><th>Câmp</th><th>Tip</th><th>Constrângeri</th></tr></thead>
+                    <tbody>
+                      <tr><td>Id</td><td>Guid</td><td>PK</td></tr>
+                      <tr><td>UserId</td><td>Guid</td><td>FK → User</td></tr>
+                      <tr><td>Name</td><td>string(100)</td><td>Required</td></tr>
+                      <tr><td>Destination</td><td>string(200)</td><td>Required</td></tr>
+                      <tr><td>Origin</td><td>string(200)</td><td>Required</td></tr>
+                      <tr><td>StartDate</td><td>DateOnly</td><td>Required</td></tr>
+                      <tr><td>EndDate</td><td>DateOnly</td><td>Required</td></tr>
+                      <tr><td>Status</td><td>enum</td><td>Draft/Planning/...</td></tr>
+                      <tr><td>BudgetTotal</td><td>decimal</td><td>≥ 0</td></tr>
+                      <tr><td>Travelers</td><td>int</td><td>≥ 1</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card border-0 shadow-sm">
+                <div class="card-header bg-success text-white fw-bold"><i class="bi bi-calendar3 me-2"></i>ItineraryItem</div>
+                <div class="card-body p-0">
+                  <table class="table table-sm mb-0">
+                    <thead><tr><th>Câmp</th><th>Tip</th><th>Constrângeri</th></tr></thead>
+                    <tbody>
+                      <tr><td>Id</td><td>Guid</td><td>PK</td></tr>
+                      <tr><td>TripId</td><td>Guid</td><td>FK → Trip</td></tr>
+                      <tr><td>DayNumber</td><td>int</td><td>≥ 1</td></tr>
+                      <tr><td>Type</td><td>enum</td><td>Flight/Hotel/Activity/Food</td></tr>
+                      <tr><td>Title</td><td>string(200)</td><td>Required</td></tr>
+                      <tr><td>Description</td><td>string(500)</td><td>Nullable</td></tr>
+                      <tr><td>StartTime</td><td>TimeOnly</td><td>Nullable</td></tr>
+                      <tr><td>Cost</td><td>decimal</td><td>≥ 0</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card border-0 shadow-sm">
+                <div class="card-header bg-warning fw-bold"><i class="bi bi-wallet2 me-2"></i>Expense</div>
+                <div class="card-body p-0">
+                  <table class="table table-sm mb-0">
+                    <thead><tr><th>Câmp</th><th>Tip</th><th>Constrângeri</th></tr></thead>
+                    <tbody>
+                      <tr><td>Id</td><td>Guid</td><td>PK</td></tr>
+                      <tr><td>TripId</td><td>Guid</td><td>FK → Trip</td></tr>
+                      <tr><td>Description</td><td>string(200)</td><td>Required</td></tr>
+                      <tr><td>Amount</td><td>decimal</td><td>Required, > 0</td></tr>
+                      <tr><td>Category</td><td>enum</td><td>Flights/Hotel/...</td></tr>
+                      <tr><td>Date</td><td>DateOnly</td><td>Required</td></tr>
+                      <tr><td>Currency</td><td>string(3)</td><td>ISO 4217</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ====================================================
+             7. API ENDPOINTS
+             ==================================================== -->
+        <section id="s7" class="mb-5">
+          <h2 class="section-title">7. API Endpoints (ASP.NET Core)</h2>
+
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered req-table">
+              <thead>
+                <tr>
+                  <th>Metodă</th><th>Endpoint</th><th>Descriere</th><th>Auth</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="table-light"><td colspan="4"><strong>Autentificare</strong></td></tr>
+                <tr><td><span class="badge bg-success">POST</span></td><td><code>/api/auth/register</code></td><td>Înregistrare utilizator nou</td><td>Nu</td></tr>
+                <tr><td><span class="badge bg-success">POST</span></td><td><code>/api/auth/login</code></td><td>Autentificare, returnează JWT</td><td>Nu</td></tr>
+                <tr><td><span class="badge bg-success">POST</span></td><td><code>/api/auth/logout</code></td><td>Invalidare token</td><td>Da</td></tr>
+
+                <tr class="table-light"><td colspan="4"><strong>Utilizatori</strong></td></tr>
+                <tr><td><span class="badge bg-primary">GET</span></td><td><code>/api/users/me</code></td><td>Profil utilizator curent</td><td>Da</td></tr>
+                <tr><td><span class="badge bg-warning text-dark">PUT</span></td><td><code>/api/users/me</code></td><td>Actualizare profil</td><td>Da</td></tr>
+                <tr><td><span class="badge bg-warning text-dark">PUT</span></td><td><code>/api/users/me/password</code></td><td>Schimbare parolă</td><td>Da</td></tr>
+
+                <tr class="table-light"><td colspan="4"><strong>Călătorii</strong></td></tr>
+                <tr><td><span class="badge bg-primary">GET</span></td><td><code>/api/trips</code></td><td>Lista călătoriilor utilizatorului (paginare, filtrare)</td><td>Da</td></tr>
+                <tr><td><span class="badge bg-success">POST</span></td><td><code>/api/trips</code></td><td>Creare călătorie nouă</td><td>Da</td></tr>
+                <tr><td><span class="badge bg-primary">GET</span></td><td><code>/api/trips/{id}</code></td><td>Detalii călătorie</td><td>Da</td></tr>
+                <tr><td><span class="badge bg-warning text-dark">PUT</span></td><td><code>/api/trips/{id}</code></td><td>Actualizare călătorie</td><td>Da</td></tr>
+                <tr><td><span class="badge bg-danger">DELETE</span></td><td><code>/api/trips/{id}</code></td><td>Ștergere călătorie</td><td>Da</td></tr>
+
+                <tr class="table-light"><td colspan="4"><strong>Itinerariu</strong></td></tr>
+                <tr><td><span class="badge bg-primary">GET</span></td><td><code>/api/trips/{id}/itinerary</code></td><td>Itinerariul complet al unei călătorii</td><td>Da</td></tr>
+                <tr><td><span class="badge bg-success">POST</span></td><td><code>/api/trips/{id}/itinerary/items</code></td><td>Adăugare item în itinerariu</td><td>Da</td></tr>
+                <tr><td><span class="badge bg-danger">DELETE</span></td><td><code>/api/trips/{id}/itinerary/items/{itemId}</code></td><td>Ștergere item din itinerariu</td><td>Da</td></tr>
+
+                <tr class="table-light"><td colspan="4"><strong>Cheltuieli</strong></td></tr>
+                <tr><td><span class="badge bg-primary">GET</span></td><td><code>/api/trips/{id}/expenses</code></td><td>Lista cheltuielilor unei călătorii</td><td>Da</td></tr>
+                <tr><td><span class="badge bg-success">POST</span></td><td><code>/api/trips/{id}/expenses</code></td><td>Adăugare cheltuială nouă</td><td>Da</td></tr>
+                <tr><td><span class="badge bg-danger">DELETE</span></td><td><code>/api/trips/{id}/expenses/{expId}</code></td><td>Ștergere cheltuială</td><td>Da</td></tr>
+
+                <tr class="table-light"><td colspan="4"><strong>Restaurante</strong></td></tr>
+                <tr><td><span class="badge bg-primary">GET</span></td><td><code>/api/restaurants/search</code></td><td>Căutare restaurante după locație, rază și categorii</td><td>Nu</td></tr>
+                <tr><td><span class="badge bg-primary">GET</span></td><td><code>/api/restaurants/cuisine/{type}</code></td><td>Restaurante filtrate după tip de bucătărie</td><td>Nu</td></tr>
+                <tr><td><span class="badge bg-primary">GET</span></td><td><code>/api/restaurants/local-specialties</code></td><td>Specialități culinare locale pentru o destinație</td><td>Nu</td></tr>
+                <tr><td><span class="badge bg-primary">GET</span></td><td><code>/api/restaurants/nearby</code></td><td>Cafenele și fast-food în proximitate (coordonate GPS)</td><td>Nu</td></tr>
+                <tr><td><span class="badge bg-success">POST</span></td><td><code>/api/restaurants/compare</code></td><td>Comparare și clasament restaurante cu scor multi-factor</td><td>Nu</td></tr>
+
+                <tr class="table-light"><td colspan="4"><strong>Destinații</strong></td></tr>
+                <tr><td><span class="badge bg-primary">GET</span></td><td><code>/api/destinations</code></td><td>Lista destinațiilor disponibile cu filtrare</td><td>Nu</td></tr>
+                <tr><td><span class="badge bg-primary">GET</span></td><td><code>/api/destinations/{id}</code></td><td>Detalii destinație specifică</td><td>Nu</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ====================================================
+             8. AUTENTIFICARE & SECURITATE
+             ==================================================== -->
+        <section id="s8" class="mb-5">
+          <h2 class="section-title">8. Autentificare & Securitate</h2>
+
+          <div class="row g-4">
+            <div class="col-md-6">
+              <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-danger text-white fw-bold">
+                  <i class="bi bi-shield-lock me-2"></i>Autentificare JWT
+                </div>
+                <div class="card-body">
+                  <ul class="mb-0">
+                    <li>Token JWT generat la login cu expirare de <strong>24 ore</strong></li>
+                    <li>Stocat în <code>localStorage</code> pe client</li>
+                    <li>Trimis în header <code>Authorization: Bearer</code> la fiecare request</li>
+                    <li>Validat de middleware ASP.NET Core pe rutele protejate</li>
+                    <li>Refresh token opțional pentru sesiuni prelungite</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-dark text-white fw-bold">
+                  <i class="bi bi-lock me-2"></i>Securitate parolă
+                </div>
+                <div class="card-body">
+                  <ul class="mb-0">
+                    <li>Hashing cu <strong>BCrypt</strong> (cost factor 12)</li>
+                    <li>Lungime minimă: 8 caractere</li>
+                    <li>Cel puțin o literă mare, o cifră</li>
+                    <li>Fără stocare în plain text</li>
+                    <li>Rate limiting pe endpoint-ul de login</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="card border-0 shadow-sm">
+                <div class="card-header bg-warning fw-bold">
+                  <i class="bi bi-shield-check me-2"></i>Măsuri de securitate generale
+                </div>
+                <div class="card-body">
+                  <div class="row g-3">
+                    <div class="col-md-4">
+                      <h6 class="fw-bold">CORS</h6>
+                      <p class="small mb-0">Politică CORS configurată pentru a permite doar originile autorizate (frontend).</p>
+                    </div>
+                    <div class="col-md-4">
+                      <h6 class="fw-bold">Input Validation</h6>
+                      <p class="small mb-0">Validare server-side cu Data Annotations și FluentValidation. Protecție împotriva SQL Injection prin EF Core parametrizat.</p>
+                    </div>
+                    <div class="col-md-4">
+                      <h6 class="fw-bold">HTTPS</h6>
+                      <p class="small mb-0">Redirect automat HTTP → HTTPS în producție. Certificat SSL/TLS obligatoriu.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ====================================================
+             9. CERINȚE NON-FUNCȚIONALE
+             ==================================================== -->
+        <section id="s9" class="mb-5">
+          <h2 class="section-title">9. Cerințe non-funcționale</h2>
+
+          <div class="table-responsive">
+            <table class="table table-bordered req-table">
+              <thead>
+                <tr><th>Categorie</th><th>Cerință</th><th>Target</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td rowspan="3"><strong>Performanță</strong></td>
+                  <td>Timp răspuns API (cazuri normale)</td>
+                  <td>&lt; 200ms</td>
+                </tr>
+                <tr>
+                  <td>Timp încărcare pagină (First Contentful Paint)</td>
+                  <td>&lt; 1.5s</td>
+                </tr>
+                <tr>
+                  <td>Utilizatori concurenți suportați</td>
+                  <td>≥ 100</td>
+                </tr>
+                <tr>
+                  <td rowspan="2"><strong>Disponibilitate</strong></td>
+                  <td>Uptime</td>
+                  <td>≥ 99.5%</td>
+                </tr>
+                <tr>
+                  <td>Recovery Time Objective (RTO)</td>
+                  <td>&lt; 1 oră</td>
+                </tr>
+                <tr>
+                  <td rowspan="2"><strong>Compatibilitate</strong></td>
+                  <td>Browsere suportate</td>
+                  <td>Chrome 90+, Firefox 88+, Safari 14+, Edge 90+</td>
+                </tr>
+                <tr>
+                  <td>Design responsive</td>
+                  <td>Mobile (≥320px), Tablet (≥768px), Desktop (≥1024px)</td>
+                </tr>
+                <tr>
+                  <td rowspan="2"><strong>Securitate</strong></td>
+                  <td>Autentificare</td>
+                  <td>JWT cu expirare 24h</td>
+                </tr>
+                <tr>
+                  <td>Criptare date în tranzit</td>
+                  <td>TLS 1.2+</td>
+                </tr>
+                <tr>
+                  <td><strong>Mentenabilitate</strong></td>
+                  <td>Acoperire cu teste unitare (backend)</td>
+                  <td>≥ 70%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ====================================================
+             10. STRUCTURA PROIECTULUI
+             ==================================================== -->
+        <section id="s10" class="mb-5">
+          <h2 class="section-title">10. Structura proiectului</h2>
+
+          <div class="bg-dark text-light rounded-3 p-4">
+            <pre class="mb-0 small" style="overflow-x:auto;">
+Proiect_PAW/
+├── 📄 index.html             ← Pagina principală (1)
+├── 📄 trips.html             ← Călătoriile mele (2)
+├── 📄 new-trip.html          ← Planifică călătorie (3)
+├── 📄 trip-details.html      ← Detalii călătorie (4)
+├── 📄 explore.html           ← Explorează destinații (5)
+├── 📄 budget.html            ← Buget & cheltuieli (6)
+├── 📄 profile.html           ← Profil utilizator (7)
+├── 📄 login.html             ← Autentificare
+├── 📄 register.html          ← Înregistrare
+│
+├── css/
+│   └── style.css             ← Stiluri globale personalizate
+│
+├── js/
+│   └── main.js               ← JavaScript comun (navbar, user, utils)
+│
+├── docs/
+│   └── specificatii.html     ← Acest document
+│
+└── README.md                 ← Cerințe proiect
+
+[BACKEND – ASP.NET Core 8]
+TravelPlanner.API/
+├── Controllers/
+│   ├── AuthController.cs
+│   ├── TripsController.cs
+│   ├── UsersController.cs
+│   ├── ExpensesController.cs
+│   ├── RestaurantsController.cs
+│   └── DestinationsController.cs
+├── Models/
+│   ├── User.cs
+│   ├── Trip.cs
+│   ├── ItineraryItem.cs
+│   ├── Restaurant.cs
+│   └── Expense.cs
+├── Services/
+│   ├── AuthService.cs
+│   ├── TripService.cs
+│   ├── RestaurantService.cs
+│   └── UserService.cs
+├── Data/
+│   └── AppDbContext.cs       ← EF Core DbContext
+├── Middleware/
+│   └── JwtMiddleware.cs
+└── Program.cs                ← Configurare aplicație
+            </pre>
+          </div>
+        </section>
+
+        <!-- ====================================================
+             11. CE A FOST IMPLEMENTAT
+             ==================================================== -->
+        <section id="s11" class="mb-5">
+          <h2 class="section-title">11. Ce a fost implementat până acum</h2>
+          <p>
+            Această secțiune oferă o imagine de ansamblu asupra stadiului actual al dezvoltării.
+            În prezent, <strong>întregul frontend</strong> al aplicației este complet funcțional cu date simulate (mock data).
+          </p>
+
+          <h5 class="fw-bold">11.1 Pagini finalizate (Frontend)</h5>
+          <div class="table-responsive mb-4">
+            <table class="table table-sm table-bordered req-table">
+              <thead>
+                <tr><th>Pagină</th><th>Status</th><th>Detalii implementare</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>index.html</code></td>
+                  <td><span class="badge bg-success">Complet</span></td>
+                  <td>Hero section, funcționalități, destinații populare, statistici, footer</td>
+                </tr>
+                <tr>
+                  <td><code>login.html</code></td>
+                  <td><span class="badge bg-success">Complet</span></td>
+                  <td>Formular login, validare, toggle parolă, butoane social login (decorative), loading state</td>
+                </tr>
+                <tr>
+                  <td><code>register.html</code></td>
+                  <td><span class="badge bg-success">Complet</span></td>
+                  <td>Formular complet, indicator putere parolă, validare, selecție țară</td>
+                </tr>
+                <tr>
+                  <td><code>trips.html</code></td>
+                  <td><span class="badge bg-success">Complet</span></td>
+                  <td>Lista călătoriilor (6 mock trips), căutare, filtrare status, sortare, card-uri cu progres buget</td>
+                </tr>
+                <tr>
+                  <td><code>new-trip.html</code></td>
+                  <td><span class="badge bg-success">Complet</span></td>
+                  <td>Formular în 3 pași cu validare, destinații rapide, selector activități, mesaj succes</td>
+                </tr>
+                <tr>
+                  <td><code>trip-details.html</code></td>
+                  <td><span class="badge bg-success">Complet</span></td>
+                  <td>4 tab-uri (itinerariu, zboruri, cazare, buget), timeline zi cu zi, date mock Japonia 7 zile</td>
+                </tr>
+                <tr>
+                  <td><code>explore.html</code></td>
+                  <td><span class="badge bg-success">Complet</span></td>
+                  <td>12 destinații globale, filtre (continent, tip, buget), căutare text, rating-uri</td>
+                </tr>
+                <tr>
+                  <td><code>budget.html</code></td>
+                  <td><span class="badge bg-success">Complet</span></td>
+                  <td>Selector călătorie, sumar financiar, breakdown categorii, adăugare cheltuieli, tranzacții recente</td>
+                </tr>
+                <tr>
+                  <td><code>profile.html</code></td>
+                  <td><span class="badge bg-success">Complet</span></td>
+                  <td>3 tab-uri (informații, preferințe, securitate), statistici, destinații favorite, toast notificări</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h5 class="fw-bold">11.2 Funcționalități implementate</h5>
+          <ul>
+            <li><strong>Sistem de tematizare (Dark/Light Mode)</strong> – toggle în navbar cu persistență în <code>localStorage</code></li>
+            <li><strong>Navbar responsive</strong> – sticky, cu logo, linkuri de navigare, dropdown utilizator și buton temă</li>
+            <li><strong>Sesiune utilizator simulată</strong> – date mock stocate în <code>localStorage</code>, funcții de login/logout</li>
+            <li><strong>Utilități JS partajate</strong> – <code>main.js</code> cu funcții de formatare, gestionare utilizator, temă</li>
+            <li><strong>Stiluri globale CSS</strong> – variabile CSS, componente reutilizabile, design responsive</li>
+            <li><strong>Footer consistent</strong> – prezent pe toate cele 7 pagini de conținut</li>
+          </ul>
+
+          <h5 class="fw-bold mt-4">11.3 Neimplementat încă (Backend)</h5>
+          <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Următoarele componente sunt planificate dar <strong>nu au fost încă implementate</strong>:
+          </div>
+          <ul>
+            <li><i class="bi bi-x-circle text-danger me-2"></i>Backend ASP.NET Core 9.0 (Controllers, Services, Middleware)</li>
+            <li><i class="bi bi-x-circle text-danger me-2"></i>Bază de date Supabase (PostgreSQL) cu EF Core Migrations</li>
+            <li><i class="bi bi-x-circle text-danger me-2"></i>Autentificare JWT reală (în prezent se folosesc date simulate)</li>
+            <li><i class="bi bi-x-circle text-danger me-2"></i>API REST endpoints (toate cele din secțiunea 7)</li>
+            <li><i class="bi bi-x-circle text-danger me-2"></i>Integrare API-uri externe (Amadeus, Google Places, OpenWeather)</li>
+            <li><i class="bi bi-x-circle text-danger me-2"></i>Cache Redis pentru rezultate API</li>
+            <li><i class="bi bi-x-circle text-danger me-2"></i>Teste unitare backend</li>
+            <li><i class="bi bi-x-circle text-danger me-2"></i>Conectarea frontend-ului la API-ul real (înlocuirea datelor mock)</li>
+          </ul>
+        </section>
+
+        <!-- Navigation bottom -->
+        <div class="d-flex justify-content-between mt-4 no-print">
+          <a href="../index.html" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left me-2"></i>Înapoi la aplicație
+          </a>
+          <button onclick="window.print()" class="btn btn-outline-secondary">
+            <i class="bi bi-printer me-2"></i>Tipărire / Export PDF
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-dark text-white-50 py-3 mt-5">
+    <div class="container text-center small">
+      &copy; 2026 TravelPlanner – Proiect PAW. Document de specificații v1.0
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
