@@ -1,0 +1,129 @@
+// =============================================================================
+// CERINTA 2: Schema Relationala - TravelPlanner
+// Pentru dbdiagram.io
+// =============================================================================
+
+Table users {
+  id uuid [pk]
+  first_name varchar(100) [not null]
+  last_name varchar(100) [not null]
+  email varchar(255) [unique, not null]
+  password_hash varchar(255) [not null]
+  phone varchar(20)
+  avatar_url varchar(500)
+  preferred_currency varchar(3) [not null, default: 'EUR']
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP`]
+}
+
+Table destinations {
+  id uuid [pk]
+  name varchar(200) [not null]
+  country varchar(100) [not null]
+  continent varchar(50) [not null]
+  description text
+  image_url varchar(500)
+  category varchar(50) [not null, default: 'city_break']
+  avg_budget_per_day decimal(10,2)
+  rating decimal(3,2)
+  latitude decimal(10,7)
+  longitude decimal(10,7)
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (name, country) [unique]
+  }
+}
+
+Table trips {
+  id uuid [pk]
+  user_id uuid [not null, ref: > users.id]
+  destination_id uuid [not null, ref: > destinations.id]
+  title varchar(200) [not null]
+  start_date date [not null]
+  end_date date [not null]
+  travelers_count integer [not null, default: 1]
+  total_budget decimal(12,2)
+  status varchar(50) [not null, default: 'draft']
+  notes text
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP`]
+}
+
+Table itinerary_days {
+  id uuid [pk]
+  trip_id uuid [not null, ref: > trips.id]
+  day_number integer [not null]
+  date date [not null]
+  title varchar(200)
+  notes text
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (trip_id, day_number) [unique]
+  }
+}
+
+Table itinerary_activities {
+  id uuid [pk]
+  itinerary_day_id uuid [not null, ref: > itinerary_days.id]
+  time time
+  title varchar(200) [not null]
+  description text
+  location varchar(300)
+  category varchar(50) [not null, default: 'sightseeing']
+  estimated_cost decimal(10,2) [not null, default: 0]
+  sort_order integer [not null, default: 0]
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+}
+
+Table accommodations {
+  id uuid [pk]
+  trip_id uuid [not null, ref: > trips.id]
+  name varchar(200) [not null]
+  address varchar(500)
+  check_in date [not null]
+  check_out date [not null]
+  price_per_night decimal(10,2) [not null]
+  booking_reference varchar(100)
+  accommodation_type varchar(50) [not null, default: 'hotel']
+  rating decimal(3,2)
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+}
+
+Table expenses {
+  id uuid [pk]
+  trip_id uuid [not null, ref: > trips.id]
+  category varchar(50) [not null]
+  amount decimal(10,2) [not null]
+  currency varchar(3) [not null, default: 'EUR']
+  description varchar(300) [not null]
+  date date [not null]
+  payment_method varchar(50) [not null, default: 'card']
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+}
+
+// Tabel asociativ pentru relatia N:M "Colaboreaza" (Users - Trips)
+Table trip_collaborators {
+  id uuid [pk]
+  trip_id uuid [not null, ref: > trips.id]
+  user_id uuid [not null, ref: > users.id]
+  role varchar(50) [not null, default: 'viewer']
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (trip_id, user_id) [unique]
+  }
+}
+
+// =============================================================================
+// Categorii (pentru referinta)
+// =============================================================================
+// continent: 'europe', 'asia', 'north_america', 'south_america', 'africa', 'oceania'
+// destination category: 'city_break', 'beach', 'mountain', 'cultural', 'adventure', 'wellness'
+// trip status: 'draft', 'planning', 'confirmed', 'completed', 'cancelled'
+// activity category: 'sightseeing', 'food', 'transport', 'shopping', 'entertainment', 'nature', 'other'
+// accommodation type: 'hotel', 'hostel', 'apartment', 'resort', 'camping', 'other'
+// expense category: 'accommodation', 'food', 'transport', 'activities', 'shopping', 'other'
+// payment method: 'card', 'cash', 'transfer'
+// collaborator role: 'editor', 'viewer'
