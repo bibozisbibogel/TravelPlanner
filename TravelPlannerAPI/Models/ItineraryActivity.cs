@@ -31,5 +31,5 @@ public class ItineraryActivity
 
     // Navigation properties
     [ForeignKey(nameof(ItineraryDayId))]
-    public ItineraryDay ItineraryDay { get; set; } = null!;
+    public ItineraryDay? ItineraryDay { get; set; }
 }

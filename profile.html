@@ -308,16 +308,36 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/api.js"></script>
   <script>
-    function saveProfile(e) {
+    async function saveProfile(e) {
       e.preventDefault();
       const first = document.getElementById('firstName').value.trim();
       const last  = document.getElementById('lastName').value.trim();
       const email = document.getElementById('emailInput').value.trim();
+      const phone = document.getElementById('phone').value.trim();
       const name  = first + ' ' + last;
+      const user  = getCurrentUser();
+
+      // Update via API if user has an ID
+      if (user.id) {
+        try {
+          await UsersAPI.update(user.id, {
+            id: user.id,
+            firstName: first,
+            lastName: last,
+            email: email,
+            phone: phone || null,
+            preferredCurrency: user.preferredCurrency || 'EUR',
+            passwordHash: 'unchanged'
+          });
+        } catch (err) {
+          console.warn('Failed to update profile via API:', err);
+        }
+      }
 
       // Update stored user
-      setCurrentUser({ name, email });
+      setCurrentUser({ ...user, name, email, phone });
       renderNavUser();
 
       // Update header

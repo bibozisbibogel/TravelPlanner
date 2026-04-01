@@ -88,30 +88,35 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/api.js"></script>
   <script>
-    function doLogin(e) {
+    async function doLogin(e) {
       e.preventDefault();
       const email = document.getElementById('loginEmail').value.trim();
       const pass  = document.getElementById('loginPass').value;
       const btn   = document.getElementById('loginBtn');
+      const errEl = document.getElementById('loginError');
 
+      errEl.classList.add('d-none');
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Logging in...';
 
-      setTimeout(() => {
-        if (email && pass.length >= 6) {
-          // Extract name from email (demo)
-          const namePart = email.split('@')[0].replace(/[._]/g,' ');
-          const name = namePart.split(' ')
-            .map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-          setCurrentUser({ name, email });
-          window.location.href = 'trips.html';
-        } else {
-          document.getElementById('loginError').classList.remove('d-none');
-          btn.disabled = false;
-          btn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>Log in';
-        }
-      }, 1000);
+      try {
+        const user = await UsersAPI.login(email, pass);
+        setCurrentUser({
+          id: user.id,
+          name: user.firstName + ' ' + user.lastName,
+          email: user.email,
+          phone: user.phone,
+          preferredCurrency: user.preferredCurrency
+        });
+        window.location.href = 'trips.html';
+      } catch (err) {
+        errEl.textContent = err.message || 'Incorrect email or password.';
+        errEl.classList.remove('d-none');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>Log in';
+      }
     }
 
     function togglePass(id, btn) {

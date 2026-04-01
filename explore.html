@@ -129,59 +129,76 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/api.js"></script>
   <script>
-    const DESTINATIONS = [
-      { name:'Tokyo', country:'Japan', continent:'Asia', type:'cultural', budget:'moderate',
-        desc:'The city of the future with ancient temples, refined gastronomy and a fascinating culture.',
-        tags:['Gastronomy', 'Culture', 'Technology'], rating:4.9, price:'$2,000–$3,500',
-        img:'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&q=80' },
-      { name:'Paris', country:'France', continent:'Europe', type:'city', budget:'moderate',
-        desc:'The City of Light with its iconic architecture, world-renowned museums and refined gastronomy.',
-        tags:['Romantic', 'Art', 'Gastronomy'], rating:4.8, price:'$1,800–$3,000',
-        img:'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&q=80' },
-      { name:'Bali', country:'Indonesia', continent:'Asia', type:'beach', budget:'budget',
-        desc:'The island of the gods with tropical beaches, rice terraces and a unique spirituality.',
-        tags:['Relaxation', 'Beach', 'Spirituality'], rating:4.7, price:'$800–$1,500',
-        img:'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=400&q=80' },
-      { name:'New York', country:'USA', continent:'Americas', type:'city', budget:'luxury',
-        desc:'The city that never sleeps, with impressive skyscrapers and a unique energy.',
-        tags:['Museums', 'Broadway', 'Shopping'], rating:4.6, price:'$3,000–$5,000',
-        img:'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=400&q=80' },
-      { name:'Barcelona', country:'Spain', continent:'Europe', type:'beach', budget:'moderate',
-        desc:'Gaudi architecture, Mediterranean beaches and a legendary nightlife.',
-        tags:['Architecture', 'Beach', 'Nightlife'], rating:4.7, price:'$1,500–$2,500',
-        img:'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=400&q=80' },
-      { name:'Kenya Safari', country:'Kenya', continent:'Africa', type:'adventure', budget:'luxury',
-        desc:'Big Five, endless savannas and unforgettable sunsets in the heart of Africa.',
-        tags:['Wildlife', 'Photography', 'Nature'], rating:4.9, price:'$3,500–$7,000',
-        img:'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=400&q=80' },
-      { name:'Santorini', country:'Greece', continent:'Europe', type:'beach', budget:'moderate',
-        desc:'White houses with blue domes, romantic sunsets and excellent local wines.',
-        tags:['Romantic', 'Beach', 'Gastronomy'], rating:4.8, price:'$2,000–$3,500',
-        img:'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=400&q=80' },
-      { name:'Machu Picchu', country:'Peru', continent:'Americas', type:'adventure', budget:'moderate',
-        desc:'The Inca citadel in the Andes Mountains – one of the seven wonders of the world.',
-        tags:['History', 'Trekking', 'Adventure'], rating:4.9, price:'$1,500–$3,000',
-        img:'https://images.unsplash.com/photo-1587595431973-160d0d94add1?w=400&q=80' },
-      { name:'Amsterdam', country:'Netherlands', continent:'Europe', type:'city', budget:'moderate',
-        desc:'Picturesque canals, renowned museums, bicycles and legendary tolerance.',
-        tags:['Canals', 'Museums', 'Art'], rating:4.6, price:'$1,500–$2,500',
-        img:'https://images.unsplash.com/photo-1534351590666-13e3e96b5017?w=400&q=80' },
-      { name:'Norway', country:'Norway', continent:'Europe', type:'nature', budget:'luxury',
-        desc:'Impressive fjords, northern lights and arctic landscapes of rare beauty.',
-        tags:['Fjords', 'Northern Lights', 'Nature'], rating:4.8, price:'$3,000–$5,000',
-        img:'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=400&q=80' },
-      { name:'Rome', country:'Italy', continent:'Europe', type:'cultural', budget:'moderate',
-        desc:'The Eternal City with the Colosseum, Vatican, Trevi Fountain and authentic pasta.',
-        tags:['History', 'Gastronomy', 'Art'], rating:4.7, price:'$1,500–$2,500',
-        img:'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=400&q=80' },
-      { name:'Maldives', country:'Maldives', continent:'Asia', type:'beach', budget:'luxury',
-        desc:'Overwater bungalows, coral reefs and crystal-clear turquoise water.',
-        tags:['Snorkeling', 'Relaxation', 'Romantic'], rating:4.9, price:'$4,000–$8,000',
-        img:'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=400&q=80' }
-    ];
-
+    let DESTINATIONS = [];
     let activeCat = '';
+
+    // Map backend category values to frontend filter values
+    const categoryMap = {
+      'city_break': 'city', 'beach': 'beach', 'mountain': 'nature',
+      'cultural': 'cultural', 'adventure': 'adventure', 'wellness': 'nature'
+    };
+    // Map backend continent values to frontend display
+    const continentMap = {
+      'europe': 'Europe', 'asia': 'Asia', 'north_america': 'Americas',
+      'south_america': 'Americas', 'africa': 'Africa', 'oceania': 'Oceania'
+    };
+
+    function budgetLevel(avgPerDay) {
+      if (!avgPerDay) return 'moderate';
+      if (avgPerDay < 100) return 'budget';
+      if (avgPerDay < 250) return 'moderate';
+      return 'luxury';
+    }
+
+    async function loadDestinations() {
+      try {
+        const data = await DestinationsAPI.getAll();
+        DESTINATIONS = data.map(d => ({
+          id: d.id,
+          name: d.name,
+          country: d.country,
+          continent: continentMap[d.continent] || d.continent,
+          type: categoryMap[d.category] || d.category,
+          budget: budgetLevel(d.avgBudgetPerDay),
+          desc: d.description || '',
+          tags: [d.category?.replace('_', ' ')].filter(Boolean),
+          rating: d.rating || 0,
+          price: d.avgBudgetPerDay ? `~$${Math.round(d.avgBudgetPerDay)}/day` : '',
+          img: d.imageUrl || `https://placehold.co/400x200/0d6efd/white?text=${encodeURIComponent(d.name)}`
+        }));
+      } catch (err) {
+        console.warn('API unavailable, using fallback data:', err);
+        DESTINATIONS = [
+          { name:'Tokyo', country:'Japan', continent:'Asia', type:'cultural', budget:'moderate',
+            desc:'The city of the future with ancient temples, refined gastronomy and a fascinating culture.',
+            tags:['Gastronomy', 'Culture', 'Technology'], rating:4.9, price:'$2,000–$3,500',
+            img:'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&q=80' },
+          { name:'Paris', country:'France', continent:'Europe', type:'city', budget:'moderate',
+            desc:'The City of Light with its iconic architecture, world-renowned museums and refined gastronomy.',
+            tags:['Romantic', 'Art', 'Gastronomy'], rating:4.8, price:'$1,800–$3,000',
+            img:'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&q=80' },
+          { name:'Bali', country:'Indonesia', continent:'Asia', type:'beach', budget:'budget',
+            desc:'The island of the gods with tropical beaches, rice terraces and a unique spirituality.',
+            tags:['Relaxation', 'Beach', 'Spirituality'], rating:4.7, price:'$800–$1,500',
+            img:'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=400&q=80' },
+          { name:'New York', country:'USA', continent:'Americas', type:'city', budget:'luxury',
+            desc:'The city that never sleeps, with impressive skyscrapers and a unique energy.',
+            tags:['Museums', 'Broadway', 'Shopping'], rating:4.6, price:'$3,000–$5,000',
+            img:'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=400&q=80' },
+          { name:'Barcelona', country:'Spain', continent:'Europe', type:'beach', budget:'moderate',
+            desc:'Gaudi architecture, Mediterranean beaches and a legendary nightlife.',
+            tags:['Architecture', 'Beach', 'Nightlife'], rating:4.7, price:'$1,500–$2,500',
+            img:'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=400&q=80' },
+          { name:'Santorini', country:'Greece', continent:'Europe', type:'beach', budget:'moderate',
+            desc:'White houses with blue domes, romantic sunsets and excellent local wines.',
+            tags:['Romantic', 'Beach', 'Gastronomy'], rating:4.8, price:'$2,000–$3,500',
+            img:'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=400&q=80' }
+        ];
+      }
+      filterDests();
+    }
 
     function setCat(cat, btn) {
       activeCat = cat;
@@ -224,7 +241,7 @@
               <div class="position-relative">
                 <img src="${d.img}" class="card-img-top" alt="${d.name}"
                      style="height:200px;object-fit:cover;"
-                     onerror="this.src='https://placehold.co/400x200/0d6efd/white?text=${d.name}'" />
+                     onerror="this.src='https://placehold.co/400x200/0d6efd/white?text=${encodeURIComponent(d.name)}'" />
                 <span class="badge bg-dark bg-opacity-75 position-absolute top-0 end-0 m-2">
                   <i class="bi bi-star-fill text-warning me-1"></i>${d.rating}
                 </span>
@@ -243,7 +260,7 @@
                 </div>
                 <div class="d-flex justify-content-between align-items-center">
                   <span class="text-success fw-semibold small">${d.price}</span>
-                  <a href="new-trip.html?dest=${encodeURIComponent(d.name + ', ' + d.country)}"
+                  <a href="new-trip.html?dest=${encodeURIComponent(d.name + ', ' + d.country)}${d.id ? '&destId=' + d.id : ''}"
                      class="btn btn-primary btn-sm">
                     <i class="bi bi-plus me-1"></i>Plan
                   </a>
@@ -254,7 +271,7 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', filterDests);
+    document.addEventListener('DOMContentLoaded', loadDestinations);
   </script>
 </body>
 </html>

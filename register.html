@@ -125,6 +125,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/api.js"></script>
   <script>
     function togglePass(id, btn) {
       const input = document.getElementById(id);
@@ -168,7 +169,7 @@
       }
     });
 
-    function doRegister(e) {
+    async function doRegister(e) {
       e.preventDefault();
       const first   = document.getElementById('regFirst').value.trim();
       const last    = document.getElementById('regLast').value.trim();
@@ -195,10 +196,25 @@
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating account...';
 
-      setTimeout(() => {
-        setCurrentUser({ name: first + ' ' + last, email });
+      try {
+        const user = await UsersAPI.register({
+          firstName: first,
+          lastName: last,
+          email: email,
+          passwordHash: pass
+        });
+        setCurrentUser({
+          id: user.id,
+          name: user.firstName + ' ' + user.lastName,
+          email: user.email
+        });
         window.location.href = 'trips.html';
-      }, 1200);
+      } catch (err) {
+        errEl.textContent = err.message || 'Registration failed. Please try again.';
+        errEl.classList.remove('d-none');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-person-plus me-2"></i>Create Account';
+      }
     }
   </script>
 </body>

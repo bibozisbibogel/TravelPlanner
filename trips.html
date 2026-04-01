@@ -99,82 +99,36 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/api.js"></script>
   <script>
-    // ── Mock trip data ──────────────────────────────────────────────
-    const TRIPS = [
-      {
-        id: 1,
-        name: 'Japan Adventure',
-        destination: 'Tokyo, Japan',
-        startDate: '2025-04-10',
-        endDate: '2025-04-20',
-        status: 'confirmed',
-        budget: 3500,
-        spent: 2100,
-        travelers: 2,
-        img: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&q=80'
-      },
-      {
-        id: 2,
-        name: 'Romantic Paris',
-        destination: 'Paris, France',
-        startDate: '2025-06-15',
-        endDate: '2025-06-22',
-        status: 'planning',
-        budget: 2000,
-        spent: 0,
-        travelers: 2,
-        img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&q=80'
-      },
-      {
-        id: 3,
-        name: 'Bali Relaxation',
-        destination: 'Bali, Indonesia',
-        startDate: '2024-12-01',
-        endDate: '2024-12-14',
-        status: 'completed',
-        budget: 2800,
-        spent: 2650,
-        travelers: 1,
-        img: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=400&q=80'
-      },
-      {
-        id: 4,
-        name: 'New York City Vibes',
-        destination: 'New York, USA',
-        startDate: '2025-09-05',
-        endDate: '2025-09-12',
-        status: 'draft',
-        budget: 4500,
-        spent: 0,
-        travelers: 3,
-        img: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=400&q=80'
-      },
-      {
-        id: 5,
-        name: 'Kenya Safari',
-        destination: 'Nairobi, Kenya',
-        startDate: '2025-07-20',
-        endDate: '2025-07-30',
-        status: 'planning',
-        budget: 5000,
-        spent: 1200,
-        travelers: 4,
-        img: 'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=400&q=80'
-      },
-      {
-        id: 6,
-        name: 'Barcelona & Costa Brava',
-        destination: 'Barcelona, Spain',
-        startDate: '2024-08-10',
-        endDate: '2024-08-18',
-        status: 'completed',
-        budget: 1800,
-        spent: 1750,
-        travelers: 2,
-        img: 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=400&q=80'
+    let TRIPS = [];
+
+    async function loadTrips() {
+      const user = getCurrentUser();
+      try {
+        const data = await TripsAPI.getAll(user.id);
+        TRIPS = data.map(t => {
+          const spent = (t.expenses || []).reduce((sum, e) => sum + e.amount, 0);
+          const dest = t.destination;
+          return {
+            id: t.id,
+            name: t.title,
+            destination: dest ? `${dest.name}, ${dest.country}` : 'Unknown',
+            startDate: t.startDate,
+            endDate: t.endDate,
+            status: t.status,
+            budget: t.totalBudget || 0,
+            spent: spent,
+            travelers: t.travelersCount,
+            img: dest?.imageUrl || 'https://placehold.co/400x180/0d6efd/white?text=Destination'
+          };
+        });
+      } catch (err) {
+        console.warn('API unavailable:', err);
+        TRIPS = [];
       }
-    ];
+      filterTrips();
+    }
 
     function buildTripCard(trip) {
       const days = Math.ceil(
@@ -253,7 +207,7 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', filterTrips);
+    document.addEventListener('DOMContentLoaded', loadTrips);
   </script>
 </body>
 </html>

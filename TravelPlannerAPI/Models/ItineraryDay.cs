@@ -24,7 +24,7 @@ public class ItineraryDay
 
     // Navigation properties
     [ForeignKey(nameof(TripId))]
-    public Trip Trip { get; set; } = null!;
+    public Trip? Trip { get; set; }
 
     public ICollection<ItineraryActivity> Activities { get; set; } = new List<ItineraryActivity>();
 }

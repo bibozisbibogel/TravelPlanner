@@ -18,8 +18,8 @@ public class TripCollaborator
 
     // Navigation properties
     [ForeignKey(nameof(TripId))]
-    public Trip Trip { get; set; } = null!;
+    public Trip? Trip { get; set; }
 
     [ForeignKey(nameof(UserId))]
-    public User User { get; set; } = null!;
+    public User? User { get; set; }
 }

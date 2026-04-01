@@ -147,8 +147,9 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/api.js"></script>
   <script>
-    const TRIP_DATA = {
+    const FALLBACK_TRIP_DATA = {
       japan: {
         total: 3500,
         categories: [
@@ -210,10 +211,72 @@
     ];
 
     let currentData = null;
+    let tripsMap = {};
+    let currentTripId = null;
+
+    async function initBudget() {
+      const user = getCurrentUser();
+      const selector = document.getElementById('tripSelector');
+
+      try {
+        const trips = await TripsAPI.getAll(user.id);
+        if (trips.length > 0) {
+          selector.innerHTML = trips.map(t =>
+            `<option value="${t.id}">${t.title} (${formatDate(t.startDate)})</option>`
+          ).join('');
+
+          for (const t of trips) {
+            const expenses = await ExpensesAPI.getAll(t.id);
+            const catMap = {};
+            const catDefs = [
+              { key:'accommodation', label:'Accommodation', icon:'bi-building',    color:'warning' },
+              { key:'food',          label:'Food',          icon:'bi-egg-fried',   color:'danger'  },
+              { key:'transport',     label:'Transport',     icon:'bi-train-front', color:'info'    },
+              { key:'activities',    label:'Activities',    icon:'bi-geo-alt',     color:'success' },
+              { key:'shopping',      label:'Shopping',      icon:'bi-bag',         color:'secondary' },
+              { key:'other',         label:'Other',         icon:'bi-cash',        color:'dark'    }
+            ];
+            catDefs.forEach(c => { catMap[c.key] = { ...c, budget: Math.round((t.totalBudget || 0) / catDefs.length), spent: 0 }; });
+            expenses.forEach(e => { if (catMap[e.category]) catMap[e.category].spent += e.amount; });
+
+            tripsMap[t.id] = {
+              tripId: t.id,
+              total: t.totalBudget || 0,
+              categories: Object.values(catMap),
+              transactions: expenses.map(e => ({
+                id: e.id,
+                desc: e.description,
+                cat: e.category.charAt(0).toUpperCase() + e.category.slice(1),
+                amount: e.amount,
+                date: formatDate(e.date),
+                icon: catMap[e.category]?.icon || 'bi-cash',
+                color: catMap[e.category]?.color || 'secondary'
+              }))
+            };
+          }
+          loadTrip();
+          return;
+        }
+      } catch (err) {
+        console.warn('API unavailable, using fallback data:', err);
+      }
+      // Fallback — no trips
+      tripsMap = {};
+      document.getElementById('tripSelector').innerHTML = '<option value="">No trips found</option>';
+      currentData = { total: 0, categories: [], transactions: [] };
+      renderAll();
+      return;
+    }
 
     function loadTrip() {
       const key = document.getElementById('tripSelector').value;
-      currentData = TRIP_DATA[key];
+      currentTripId = key;
+      currentData = tripsMap[key];
+      if (!currentData) {
+        const firstKey = Object.keys(tripsMap)[0];
+        currentData = tripsMap[firstKey];
+        currentTripId = firstKey;
+      }
       renderAll();
     }
 
@@ -283,13 +346,27 @@
         </div>`).join('');
     }
 
-    function addExpense(e) {
+    async function addExpense(e) {
       e.preventDefault();
       const desc   = document.getElementById('expDesc').value;
       const amount = parseFloat(document.getElementById('expAmount').value);
       const catKey = document.getElementById('expCategory').value;
 
-      const cat = currentData.categories.find(c => c.key === catKey);
+      try {
+        await ExpensesAPI.create({
+          tripId: currentTripId,
+          category: catKey === 'flights' ? 'transport' : catKey,
+          amount: amount,
+          description: desc,
+          date: new Date().toISOString().split('T')[0],
+          currency: 'EUR',
+          paymentMethod: 'card'
+        });
+      } catch (err) {
+        console.warn('Failed to save expense to API:', err);
+      }
+
+      const cat = currentData.categories.find(c => c.key === (catKey === 'flights' ? 'transport' : catKey));
       if (cat) { cat.spent += amount; }
 
       currentData.transactions.unshift({
@@ -302,7 +379,7 @@
       renderAll();
     }
 
-    document.addEventListener('DOMContentLoaded', loadTrip);
+    document.addEventListener('DOMContentLoaded', initBudget);
   </script>
 </body>
 </html>

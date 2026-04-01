@@ -263,9 +263,10 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/api.js"></script>
   <script>
-    // Mock itinerary data
-    const DAYS = {
+    // Fallback itinerary data (used when API is unavailable)
+    const FALLBACK_DAYS = {
       1: {
         date: '10 Apr 2025', title: 'Arrival in Tokyo & Shinjuku',
         items: [
@@ -328,7 +329,7 @@
       }
     };
 
-    const BUDGET_CATS = [
+    const FALLBACK_BUDGET_CATS = [
       { label:'Flights', amount:1300, total:1500, color:'primary' },
       { label:'Accommodation',  amount:450,  total:600,  color:'warning' },
       { label:'Activities', amount:180, total:300, color:'success' },
@@ -336,6 +337,156 @@
       { label:'Local Transport', amount:0, total:150, color:'info' },
       { label:'Shopping', amount:0,  total:600,  color:'secondary' }
     ];
+
+    let DAYS = {};
+    let BUDGET_CATS = [];
+    let currentTrip = null;
+
+    const categoryIcons = {
+      'sightseeing': { icon: 'bi-geo-alt', color: 'success' },
+      'food': { icon: 'bi-egg-fried', color: 'danger' },
+      'transport': { icon: 'bi-train-front', color: 'primary' },
+      'shopping': { icon: 'bi-bag', color: 'secondary' },
+      'entertainment': { icon: 'bi-controller', color: 'info' },
+      'nature': { icon: 'bi-tree', color: 'success' },
+      'other': { icon: 'bi-geo-alt', color: 'secondary' },
+      'accommodation': { icon: 'bi-building', color: 'warning' },
+      'activities': { icon: 'bi-geo-alt', color: 'success' }
+    };
+    const expenseCatColors = {
+      'accommodation': 'warning', 'food': 'danger', 'transport': 'info',
+      'activities': 'success', 'shopping': 'secondary', 'other': 'dark'
+    };
+
+    async function loadTripDetails() {
+      const params = new URLSearchParams(window.location.search);
+      const tripId = params.get('id');
+
+      if (!tripId) {
+        // No ID, use fallback data
+        DAYS = FALLBACK_DAYS;
+        BUDGET_CATS = FALLBACK_BUDGET_CATS;
+        renderDaySelector();
+        renderDay(1);
+        renderBudgetCats();
+        return;
+      }
+
+      try {
+        currentTrip = await TripsAPI.getById(tripId);
+        const dest = currentTrip.destination;
+
+        // Update header
+        document.querySelector('.breadcrumb .active').textContent = currentTrip.title;
+        document.querySelector('h1.fw-bold').textContent = currentTrip.title;
+        document.querySelector('.badge.bg-success').textContent = statusLabel(currentTrip.status);
+        document.querySelector('.badge.bg-success').className = `badge bg-${statusClass(currentTrip.status)} mb-2`;
+
+        const headerInfo = document.querySelector('.opacity-85');
+        if (headerInfo) {
+          headerInfo.innerHTML = `
+            <i class="bi bi-geo-alt-fill me-1"></i>${dest ? dest.name + ', ' + dest.country : 'Unknown'} &nbsp;&middot;&nbsp;
+            <i class="bi bi-calendar3 me-1"></i>${formatDate(currentTrip.startDate)} – ${formatDate(currentTrip.endDate)} &nbsp;&middot;&nbsp;
+            <i class="bi bi-people me-1"></i>${currentTrip.travelersCount} travelers`;
+        }
+
+        // Build DAYS from itineraryDays
+        DAYS = {};
+        const days = (currentTrip.itineraryDays || []).sort((a, b) => a.dayNumber - b.dayNumber);
+        days.forEach(day => {
+          DAYS[day.dayNumber] = {
+            date: formatDate(day.date),
+            title: day.title || `Day ${day.dayNumber}`,
+            items: (day.activities || []).map(a => {
+              const cat = categoryIcons[a.category] || categoryIcons.other;
+              return {
+                type: a.category,
+                time: a.time ? a.time.substring(0, 5) : '',
+                title: a.title,
+                desc: a.description || '',
+                icon: cat.icon,
+                color: cat.color
+              };
+            })
+          };
+        });
+
+        // Build budget categories from expenses
+        const expenses = currentTrip.expenses || [];
+        const expensesByCategory = {};
+        expenses.forEach(e => {
+          if (!expensesByCategory[e.category]) {
+            expensesByCategory[e.category] = { amount: 0 };
+          }
+          expensesByCategory[e.category].amount += e.amount;
+        });
+        const totalBudget = currentTrip.totalBudget || 0;
+        const totalSpent = expenses.reduce((s, e) => s + e.amount, 0);
+        const catKeys = ['accommodation', 'food', 'transport', 'activities', 'shopping', 'other'];
+        BUDGET_CATS = catKeys.map(key => ({
+          label: key.charAt(0).toUpperCase() + key.slice(1),
+          amount: expensesByCategory[key]?.amount || 0,
+          total: Math.round(totalBudget / catKeys.length),
+          color: expenseCatColors[key] || 'secondary'
+        }));
+
+        // Update stat cards
+        const travelDays = Math.ceil((new Date(currentTrip.endDate) - new Date(currentTrip.startDate)) / 86400000);
+        const statValues = document.querySelectorAll('.stat-value');
+        if (statValues.length >= 4) {
+          statValues[0].textContent = travelDays;
+          statValues[1].textContent = formatCurrency(totalSpent) + ' of ' + formatCurrency(totalBudget);
+          statValues[2].textContent = days.reduce((s, d) => s + (d.activities?.length || 0), 0);
+          statValues[3].textContent = (currentTrip.accommodations || []).length;
+        }
+
+        // Render accommodations tab
+        const hotelsTab = document.getElementById('tabHotels');
+        if (hotelsTab && currentTrip.accommodations?.length > 0) {
+          hotelsTab.innerHTML = '<div class="row g-3">' + currentTrip.accommodations.map(a => `
+            <div class="col-md-6">
+              <div class="card tp-card h-100">
+                <div class="card-body">
+                  <h6 class="fw-bold">${a.name}</h6>
+                  <p class="small text-muted mb-2"><i class="bi bi-geo-alt me-1"></i>${a.address || 'No address'}</p>
+                  ${a.rating ? `<div class="d-flex gap-1 mb-2">
+                    ${'<i class="bi bi-star-fill text-warning small"></i>'.repeat(Math.round(a.rating))}
+                    <span class="small text-muted ms-1">${a.rating}/5</span>
+                  </div>` : ''}
+                  <div class="d-flex justify-content-between small text-muted">
+                    <span><i class="bi bi-calendar3 me-1"></i>${formatDate(a.checkIn)} – ${formatDate(a.checkOut)}</span>
+                    <span class="text-success fw-semibold">${formatCurrency(a.pricePerNight)}/night</span>
+                  </div>
+                </div>
+              </div>
+            </div>`).join('') + '</div>';
+        }
+
+      } catch (err) {
+        console.warn('API unavailable, using fallback data:', err);
+        DAYS = FALLBACK_DAYS;
+        BUDGET_CATS = FALLBACK_BUDGET_CATS;
+      }
+
+      renderDaySelector();
+      if (Object.keys(DAYS).length > 0) {
+        renderDay(parseInt(Object.keys(DAYS)[0]));
+      }
+      renderBudgetCats();
+    }
+
+    function renderDaySelector() {
+      const sel = document.getElementById('daySel');
+      const dayNums = Object.keys(DAYS).map(Number).sort((a, b) => a - b);
+      if (dayNums.length === 0) {
+        sel.innerHTML = '<p class="text-muted small">No itinerary days yet.</p>';
+        return;
+      }
+      sel.innerHTML = dayNums.map((n, i) =>
+        `<button class="btn btn-${i === 0 ? 'primary' : 'outline-secondary'} btn-sm day-btn"
+                 onclick="selectDay(${n}, this)">Day ${n}</button>`
+      ).join('');
+    }
 
     function selectDay(n, btn) {
       document.querySelectorAll('.day-btn').forEach(b => {
@@ -347,13 +498,17 @@
 
     function renderDay(n) {
       const day = DAYS[n];
-      if (!day) return;
+      if (!day) {
+        document.getElementById('dayContent').innerHTML = '<p class="text-muted">No activities for this day.</p>';
+        return;
+      }
       const html = `
         <div class="card tp-card mb-3">
           <div class="card-header bg-transparent fw-bold">
             <i class="bi bi-calendar-event me-2 text-primary"></i>${day.date} – ${day.title}
           </div>
           <div class="card-body">
+            ${day.items.length === 0 ? '<p class="text-muted small">No activities planned yet.</p>' : `
             <div class="timeline">
               ${day.items.map(item => `
                 <div class="timeline-item type-${item.type}">
@@ -377,7 +532,7 @@
                   </div>
                 </div>
               `).join('')}
-            </div>
+            </div>`}
           </div>
         </div>`;
       document.getElementById('dayContent').innerHTML = html;
@@ -398,10 +553,7 @@
       `).join('');
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      renderDay(1);
-      renderBudgetCats();
-    });
+    document.addEventListener('DOMContentLoaded', loadTripDetails);
   </script>
 </body>
 </html>
