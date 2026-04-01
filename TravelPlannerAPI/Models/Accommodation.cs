@@ -37,5 +37,5 @@ public class Accommodation
 
     // Navigation properties
     [ForeignKey(nameof(TripId))]
-    public Trip Trip { get; set; } = null!;
+    public Trip? Trip { get; set; }
 }

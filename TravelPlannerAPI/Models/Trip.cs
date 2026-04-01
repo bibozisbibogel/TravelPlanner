@@ -35,10 +35,10 @@ public class Trip
 
     // Navigation properties
     [ForeignKey(nameof(UserId))]
-    public User User { get; set; } = null!;
+    public User? User { get; set; }
 
     [ForeignKey(nameof(DestinationId))]
-    public Destination Destination { get; set; } = null!;
+    public Destination? Destination { get; set; }
 
     public ICollection<ItineraryDay> ItineraryDays { get; set; } = new List<ItineraryDay>();
     public ICollection<Accommodation> Accommodations { get; set; } = new List<Accommodation>();
