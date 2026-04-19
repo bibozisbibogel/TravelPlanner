@@ -171,10 +171,18 @@
                   <span>${formatCurrency(trip.budget)}</span>
                 </div>
               </div>
-              <a href="trip-details.html?id=${trip.id}"
-                 class="btn btn-outline-primary btn-sm mt-auto">
-                <i class="bi bi-eye me-1"></i>View Details
-              </a>
+              <div class="d-flex gap-2 mt-auto">
+                <a href="trip-details.html?id=${trip.id}"
+                   class="btn btn-outline-primary btn-sm flex-grow-1">
+                  <i class="bi bi-eye me-1"></i>View Details
+                </a>
+                <button class="btn btn-outline-secondary btn-sm" onclick="openEditTrip('${trip.id}')" title="Edit">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-outline-danger btn-sm" onclick="deleteTrip('${trip.id}', '${trip.name.replace(/'/g, "\\'")}')" title="Delete">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>`;
@@ -207,7 +215,142 @@
       }
     }
 
+    let DESTINATIONS_LIST = [];
+    let editingTripId = null;
+
+    async function openEditTrip(id) {
+      const trip = TRIPS.find(t => t.id === id);
+      if (!trip) return;
+      editingTripId = id;
+
+      if (DESTINATIONS_LIST.length === 0) {
+        try { DESTINATIONS_LIST = await DestinationsAPI.getAll(); } catch (_) {}
+      }
+      const destSelect = document.getElementById('editDestId');
+      destSelect.innerHTML = DESTINATIONS_LIST.map(d =>
+        `<option value="${d.id}">${d.name}, ${d.country}</option>`
+      ).join('');
+
+      const fullTrip = await TripsAPI.getById(id).catch(() => null);
+      if (fullTrip) {
+        destSelect.value = fullTrip.destinationId || '';
+        document.getElementById('editTitle').value = fullTrip.title || '';
+        document.getElementById('editStartDate').value = fullTrip.startDate?.split('T')[0] || '';
+        document.getElementById('editEndDate').value = fullTrip.endDate?.split('T')[0] || '';
+        document.getElementById('editTravelers').value = fullTrip.travelersCount || 1;
+        document.getElementById('editBudget').value = fullTrip.totalBudget || '';
+        document.getElementById('editStatus').value = fullTrip.status || 'planning';
+        document.getElementById('editNotes').value = fullTrip.notes || '';
+      } else {
+        document.getElementById('editTitle').value = trip.name || '';
+        document.getElementById('editStartDate').value = trip.startDate?.split('T')[0] || '';
+        document.getElementById('editEndDate').value = trip.endDate?.split('T')[0] || '';
+        document.getElementById('editTravelers').value = trip.travelers || 1;
+        document.getElementById('editBudget').value = trip.budget || '';
+        document.getElementById('editStatus').value = trip.status || 'planning';
+        document.getElementById('editNotes').value = '';
+      }
+
+      new bootstrap.Modal(document.getElementById('editTripModal')).show();
+    }
+
+    async function saveEditTrip() {
+      const btn = document.getElementById('saveEditBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+      try {
+        await TripsAPI.update(editingTripId, {
+          id: editingTripId,
+          destinationId: document.getElementById('editDestId').value,
+          title: document.getElementById('editTitle').value,
+          startDate: document.getElementById('editStartDate').value,
+          endDate: document.getElementById('editEndDate').value,
+          travelersCount: parseInt(document.getElementById('editTravelers').value) || 1,
+          totalBudget: parseFloat(document.getElementById('editBudget').value) || null,
+          status: document.getElementById('editStatus').value,
+          notes: document.getElementById('editNotes').value || null
+        });
+        bootstrap.Modal.getInstance(document.getElementById('editTripModal')).hide();
+        await loadTrips();
+      } catch (err) {
+        alert('Failed to update trip: ' + (err.message || JSON.stringify(err)));
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Save Changes';
+      }
+    }
+
+    async function deleteTrip(id, name) {
+      if (!confirm(`Delete trip "${name}"? This cannot be undone.`)) return;
+      try {
+        await TripsAPI.delete(id);
+        await loadTrips();
+      } catch (err) {
+        alert('Failed to delete trip: ' + (err.message || JSON.stringify(err)));
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', loadTrips);
   </script>
+
+  <!-- ===== EDIT TRIP MODAL ===== -->
+  <div class="modal fade" id="editTripModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>Edit Trip</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label fw-semibold">Title</label>
+              <input type="text" class="form-control" id="editTitle" required />
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Destination</label>
+              <select class="form-select" id="editDestId"></select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Start Date</label>
+              <input type="date" class="form-control" id="editStartDate" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">End Date</label>
+              <input type="date" class="form-control" id="editEndDate" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Travelers</label>
+              <input type="number" class="form-control" id="editTravelers" min="1" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Budget (USD)</label>
+              <input type="number" class="form-control" id="editBudget" min="0" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Status</label>
+              <select class="form-select" id="editStatus">
+                <option value="draft">Draft</option>
+                <option value="planning">Planning</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Notes</label>
+              <textarea class="form-control" id="editNotes" rows="2"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="saveEditBtn" onclick="saveEditTrip()">
+            <i class="bi bi-check-lg me-1"></i>Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

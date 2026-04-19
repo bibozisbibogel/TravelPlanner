@@ -34,9 +34,14 @@
 
   <!-- ===== PAGE HEADER ===== -->
   <div class="page-header">
-    <div class="container">
-      <h1><i class="bi bi-globe2 me-2"></i>Explore Destinations</h1>
-      <p>Discover new places and get inspired for your next adventure</p>
+    <div class="container d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div>
+        <h1><i class="bi bi-globe2 me-2"></i>Explore Destinations</h1>
+        <p>Discover new places and get inspired for your next adventure</p>
+      </div>
+      <button class="btn btn-light fw-semibold" onclick="openAddDest()">
+        <i class="bi bi-plus-lg me-2"></i>Add Destination
+      </button>
     </div>
   </div>
 
@@ -132,7 +137,9 @@
   <script src="js/api.js"></script>
   <script>
     let DESTINATIONS = [];
+    let DESTINATIONS_RAW = [];
     let activeCat = '';
+    let editingDestId = null;
 
     // Map backend category values to frontend filter values
     const categoryMap = {
@@ -155,6 +162,7 @@
     async function loadDestinations() {
       try {
         const data = await DestinationsAPI.getAll();
+        DESTINATIONS_RAW = data;
         DESTINATIONS = data.map(d => ({
           id: d.id,
           name: d.name,
@@ -170,6 +178,7 @@
         }));
       } catch (err) {
         console.warn('API unavailable, using fallback data:', err);
+        DESTINATIONS_RAW = [];
         DESTINATIONS = [
           { name:'Tokyo', country:'Japan', continent:'Asia', type:'cultural', budget:'moderate',
             desc:'The city of the future with ancient temples, refined gastronomy and a fascinating culture.',
@@ -260,10 +269,19 @@
                 </div>
                 <div class="d-flex justify-content-between align-items-center">
                   <span class="text-success fw-semibold small">${d.price}</span>
-                  <a href="new-trip.html?dest=${encodeURIComponent(d.name + ', ' + d.country)}${d.id ? '&destId=' + d.id : ''}"
-                     class="btn btn-primary btn-sm">
-                    <i class="bi bi-plus me-1"></i>Plan
-                  </a>
+                  <div class="d-flex gap-1">
+                    <a href="new-trip.html?dest=${encodeURIComponent(d.name + ', ' + d.country)}${d.id ? '&destId=' + d.id : ''}"
+                       class="btn btn-primary btn-sm">
+                      <i class="bi bi-plus me-1"></i>Plan
+                    </a>
+                    ${d.id ? `
+                    <button class="btn btn-outline-secondary btn-sm" onclick="openEditDest('${d.id}')" title="Edit">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm" onclick="deleteDest('${d.id}', '${(d.name + ', ' + d.country).replace(/'/g, "\\'")}')" title="Delete">
+                      <i class="bi bi-trash"></i>
+                    </button>` : ''}
+                  </div>
                 </div>
               </div>
             </div>
@@ -271,7 +289,152 @@
       }
     }
 
+    function openAddDest() {
+      editingDestId = null;
+      document.getElementById('destModalTitle').textContent = 'Add Destination';
+      document.getElementById('destForm').reset();
+      new bootstrap.Modal(document.getElementById('destModal')).show();
+    }
+
+    function openEditDest(id) {
+      const raw = DESTINATIONS_RAW.find(d => d.id === id);
+      if (!raw) return;
+      editingDestId = id;
+      document.getElementById('destModalTitle').textContent = 'Edit Destination';
+      document.getElementById('dName').value = raw.name || '';
+      document.getElementById('dCountry').value = raw.country || '';
+      document.getElementById('dContinent').value = raw.continent || 'europe';
+      document.getElementById('dCategory').value = raw.category || 'city_break';
+      document.getElementById('dDescription').value = raw.description || '';
+      document.getElementById('dImageUrl').value = raw.imageUrl || '';
+      document.getElementById('dBudgetPerDay').value = raw.avgBudgetPerDay || '';
+      document.getElementById('dRating').value = raw.rating || '';
+      document.getElementById('dLat').value = raw.latitude || '';
+      document.getElementById('dLon').value = raw.longitude || '';
+      new bootstrap.Modal(document.getElementById('destModal')).show();
+    }
+
+    async function saveDest() {
+      const btn = document.getElementById('saveDestBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+      const payload = {
+        name: document.getElementById('dName').value,
+        country: document.getElementById('dCountry').value,
+        continent: document.getElementById('dContinent').value,
+        category: document.getElementById('dCategory').value,
+        description: document.getElementById('dDescription').value || null,
+        imageUrl: document.getElementById('dImageUrl').value || null,
+        avgBudgetPerDay: parseFloat(document.getElementById('dBudgetPerDay').value) || 0,
+        rating: parseFloat(document.getElementById('dRating').value) || 0,
+        latitude: parseFloat(document.getElementById('dLat').value) || 0,
+        longitude: parseFloat(document.getElementById('dLon').value) || 0
+      };
+      try {
+        if (editingDestId) {
+          await DestinationsAPI.update(editingDestId, { id: editingDestId, ...payload });
+        } else {
+          await DestinationsAPI.create(payload);
+        }
+        bootstrap.Modal.getInstance(document.getElementById('destModal')).hide();
+        await loadDestinations();
+      } catch (err) {
+        alert('Failed to save destination: ' + (err.message || JSON.stringify(err)));
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Save';
+      }
+    }
+
+    async function deleteDest(id, label) {
+      if (!confirm(`Delete "${label}"? This cannot be undone.`)) return;
+      try {
+        await DestinationsAPI.delete(id);
+        await loadDestinations();
+      } catch (err) {
+        alert('Failed to delete destination: ' + (err.message || JSON.stringify(err)));
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', loadDestinations);
   </script>
+
+  <!-- ===== DESTINATION MODAL (Add / Edit) ===== -->
+  <div class="modal fade" id="destModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="destModalTitle">Add Destination</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="destForm">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="dName" required />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Country <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="dCountry" required />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Continent</label>
+                <select class="form-select" id="dContinent">
+                  <option value="europe">Europe</option>
+                  <option value="asia">Asia</option>
+                  <option value="north_america">North America</option>
+                  <option value="south_america">South America</option>
+                  <option value="africa">Africa</option>
+                  <option value="oceania">Oceania</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Category</label>
+                <select class="form-select" id="dCategory">
+                  <option value="city_break">City Break</option>
+                  <option value="beach">Beach</option>
+                  <option value="mountain">Mountain</option>
+                  <option value="cultural">Cultural</option>
+                  <option value="adventure">Adventure</option>
+                  <option value="wellness">Wellness</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">Description</label>
+                <textarea class="form-control" id="dDescription" rows="2"></textarea>
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">Image URL</label>
+                <input type="text" class="form-control" id="dImageUrl" placeholder="https://..." />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Avg Budget/Day (USD)</label>
+                <input type="number" class="form-control" id="dBudgetPerDay" min="0" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Rating (0–5)</label>
+                <input type="number" class="form-control" id="dRating" min="0" max="5" step="0.1" />
+              </div>
+              <div class="col-md-2">
+                <label class="form-label fw-semibold">Latitude</label>
+                <input type="number" class="form-control" id="dLat" step="0.0001" />
+              </div>
+              <div class="col-md-2">
+                <label class="form-label fw-semibold">Longitude</label>
+                <input type="number" class="form-control" id="dLon" step="0.0001" />
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="saveDestBtn" onclick="saveDest()">
+            <i class="bi bi-check-lg me-1"></i>Save
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using TravelPlannerAPI.Data;
 using TravelPlannerAPI.Models;
+using TravelPlannerAPI.Services;
 
 namespace TravelPlannerAPI.Controllers;
 
@@ -9,98 +8,49 @@ namespace TravelPlannerAPI.Controllers;
 [Route("api/[controller]")]
 public class TripsController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
+    private readonly ITripService _service;
 
-    public TripsController(ApplicationDbContext context)
+    public TripsController(ITripService service)
     {
-        _context = context;
+        _service = service;
     }
 
-    // GET: api/trips?userId={userId}
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Trip>>> GetAll([FromQuery] Guid? userId)
     {
-        var query = _context.Trips
-            .Include(t => t.Destination)
-            .Include(t => t.Expenses)
-            .AsQueryable();
-
-        if (userId.HasValue)
-            query = query.Where(t => t.UserId == userId.Value);
-
-        return await query.OrderByDescending(t => t.StartDate).ToListAsync();
+        var trips = await _service.GetAllAsync(userId);
+        return Ok(trips);
     }
 
-    // GET: api/trips/{id}
     [HttpGet("{id}")]
     public async Task<ActionResult<Trip>> GetById(Guid id)
     {
-        var trip = await _context.Trips
-            .Include(t => t.Destination)
-            .Include(t => t.ItineraryDays)
-                .ThenInclude(d => d.Activities)
-            .Include(t => t.Accommodations)
-            .Include(t => t.Expenses)
-            .Include(t => t.Collaborators)
-            .FirstOrDefaultAsync(t => t.Id == id);
-
-        if (trip == null)
-            return NotFound();
-
-        return trip;
+        var trip = await _service.GetByIdAsync(id);
+        if (trip == null) return NotFound();
+        return Ok(trip);
     }
 
-    // POST: api/trips
     [HttpPost]
     public async Task<ActionResult<Trip>> Create(Trip trip)
     {
-        trip.Id = Guid.NewGuid();
-        trip.CreatedAt = DateTime.UtcNow;
-        trip.UpdatedAt = DateTime.UtcNow;
-
-        _context.Trips.Add(trip);
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetById), new { id = trip.Id }, trip);
+        var created = await _service.CreateAsync(trip);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
-    // PUT: api/trips/{id}
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(Guid id, Trip trip)
     {
-        if (id != trip.Id)
-            return BadRequest();
-
-        var existing = await _context.Trips.FindAsync(id);
-        if (existing == null)
-            return NotFound();
-
-        existing.Title = trip.Title;
-        existing.DestinationId = trip.DestinationId;
-        existing.StartDate = trip.StartDate;
-        existing.EndDate = trip.EndDate;
-        existing.TravelersCount = trip.TravelersCount;
-        existing.TotalBudget = trip.TotalBudget;
-        existing.Status = trip.Status;
-        existing.Notes = trip.Notes;
-        existing.UpdatedAt = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-
-        return Ok(existing);
+        if (id != trip.Id) return BadRequest();
+        var updated = await _service.UpdateAsync(id, trip);
+        if (updated == null) return NotFound();
+        return Ok(updated);
     }
 
-    // DELETE: api/trips/{id}
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var trip = await _context.Trips.FindAsync(id);
-        if (trip == null)
-            return NotFound();
-
-        _context.Trips.Remove(trip);
-        await _context.SaveChangesAsync();
-
+        var deleted = await _service.DeleteAsync(id);
+        if (!deleted) return NotFound();
         return NoContent();
     }
 }
