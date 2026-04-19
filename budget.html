@@ -245,10 +245,15 @@
               categories: Object.values(catMap),
               transactions: expenses.map(e => ({
                 id: e.id,
+                rawDesc: e.description,
                 desc: e.description,
                 cat: e.category.charAt(0).toUpperCase() + e.category.slice(1),
+                rawCategory: e.category,
                 amount: e.amount,
+                rawDate: e.date,
                 date: formatDate(e.date),
+                paymentMethod: e.paymentMethod,
+                currency: e.currency,
                 icon: catMap[e.category]?.icon || 'bi-cash',
                 color: catMap[e.category]?.color || 'secondary'
               }))
@@ -335,6 +340,13 @@
               <div class="text-muted" style="font-size:0.75rem;">${t.cat} · ${t.date}</div>
             </div>
             <span class="fw-bold text-danger small">-${formatCurrency(t.amount)}</span>
+            ${t.id ? `
+            <button class="btn btn-sm btn-outline-secondary p-1" onclick="openEditExpense('${t.id}')" title="Edit">
+              <i class="bi bi-pencil" style="font-size:0.75rem;"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger p-1" onclick="deleteExpense('${t.id}')" title="Delete">
+              <i class="bi bi-trash" style="font-size:0.75rem;"></i>
+            </button>` : ''}
           </div>`).join('');
       }
 
@@ -351,35 +363,184 @@
       const desc   = document.getElementById('expDesc').value;
       const amount = parseFloat(document.getElementById('expAmount').value);
       const catKey = document.getElementById('expCategory').value;
+      const resolvedCat = catKey === 'flights' ? 'transport' : catKey;
 
       try {
         await ExpensesAPI.create({
           tripId: currentTripId,
-          category: catKey === 'flights' ? 'transport' : catKey,
+          category: resolvedCat,
           amount: amount,
           description: desc,
           date: new Date().toISOString().split('T')[0],
           currency: 'EUR',
           paymentMethod: 'card'
         });
+        document.getElementById('expenseForm').reset();
+        await reloadCurrentTrip();
+        return;
       } catch (err) {
         console.warn('Failed to save expense to API:', err);
       }
 
-      const cat = currentData.categories.find(c => c.key === (catKey === 'flights' ? 'transport' : catKey));
+      const cat = currentData.categories.find(c => c.key === resolvedCat);
       if (cat) { cat.spent += amount; }
-
       currentData.transactions.unshift({
         desc, cat: cat ? cat.label : 'Other', amount,
         date: new Date().toLocaleDateString('en-US'),
         icon: cat ? cat.icon : 'bi-cash', color: cat ? cat.color : 'secondary'
       });
-
       document.getElementById('expenseForm').reset();
+      renderAll();
+    }
+
+    let editingExpenseId = null;
+
+    function openEditExpense(id) {
+      editingExpenseId = id;
+      const tx = currentData.transactions.find(t => t.id === id);
+      if (!tx) return;
+      document.getElementById('editExpDesc').value = tx.rawDesc || tx.desc;
+      document.getElementById('editExpAmount').value = tx.amount;
+      document.getElementById('editExpCategory').value = tx.rawCategory || 'other';
+      document.getElementById('editExpDate').value = tx.rawDate || new Date().toISOString().split('T')[0];
+      document.getElementById('editExpPayment').value = tx.paymentMethod || 'card';
+      document.getElementById('editExpCurrency').value = tx.currency || 'EUR';
+      new bootstrap.Modal(document.getElementById('editExpenseModal')).show();
+    }
+
+    async function saveEditExpense() {
+      const btn = document.getElementById('saveExpenseBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+      try {
+        await ExpensesAPI.update(editingExpenseId, {
+          id: editingExpenseId,
+          tripId: currentTripId,
+          description: document.getElementById('editExpDesc').value,
+          amount: parseFloat(document.getElementById('editExpAmount').value),
+          category: document.getElementById('editExpCategory').value,
+          date: document.getElementById('editExpDate').value,
+          paymentMethod: document.getElementById('editExpPayment').value,
+          currency: document.getElementById('editExpCurrency').value
+        });
+        bootstrap.Modal.getInstance(document.getElementById('editExpenseModal')).hide();
+        await reloadCurrentTrip();
+      } catch (err) {
+        alert('Failed to update expense: ' + (err.message || JSON.stringify(err)));
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Save Changes';
+      }
+    }
+
+    async function deleteExpense(id) {
+      if (!confirm('Delete this expense? This cannot be undone.')) return;
+      try {
+        await ExpensesAPI.delete(id);
+        await reloadCurrentTrip();
+      } catch (err) {
+        alert('Failed to delete expense: ' + (err.message || JSON.stringify(err)));
+      }
+    }
+
+    async function reloadCurrentTrip() {
+      if (!currentTripId) return;
+      const expenses = await ExpensesAPI.getAll(currentTripId);
+      const tripData = tripsMap[currentTripId];
+      if (!tripData) return;
+      const catDefs = [
+        { key:'accommodation', label:'Accommodation', icon:'bi-building',    color:'warning' },
+        { key:'food',          label:'Food',          icon:'bi-egg-fried',   color:'danger'  },
+        { key:'transport',     label:'Transport',     icon:'bi-train-front', color:'info'    },
+        { key:'activities',    label:'Activities',    icon:'bi-geo-alt',     color:'success' },
+        { key:'shopping',      label:'Shopping',      icon:'bi-bag',         color:'secondary' },
+        { key:'other',         label:'Other',         icon:'bi-cash',        color:'dark'    }
+      ];
+      const catMap = {};
+      catDefs.forEach(c => { catMap[c.key] = { ...c, budget: Math.round((tripData.total || 0) / catDefs.length), spent: 0 }; });
+      expenses.forEach(e => { if (catMap[e.category]) catMap[e.category].spent += e.amount; });
+      tripData.categories = Object.values(catMap);
+      tripData.transactions = expenses.map(e => ({
+        id: e.id,
+        rawDesc: e.description,
+        desc: e.description,
+        cat: e.category.charAt(0).toUpperCase() + e.category.slice(1),
+        rawCategory: e.category,
+        amount: e.amount,
+        rawDate: e.date,
+        date: formatDate(e.date),
+        paymentMethod: e.paymentMethod,
+        currency: e.currency,
+        icon: catMap[e.category]?.icon || 'bi-cash',
+        color: catMap[e.category]?.color || 'secondary'
+      }));
+      currentData = tripData;
       renderAll();
     }
 
     document.addEventListener('DOMContentLoaded', initBudget);
   </script>
+
+  <!-- ===== EDIT EXPENSE MODAL ===== -->
+  <div class="modal fade" id="editExpenseModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>Edit Expense</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label fw-semibold">Description</label>
+              <input type="text" class="form-control" id="editExpDesc" required />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Amount</label>
+              <input type="number" class="form-control" id="editExpAmount" min="0.01" step="0.01" required />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Currency</label>
+              <select class="form-select" id="editExpCurrency">
+                <option value="EUR">EUR</option>
+                <option value="USD">USD</option>
+                <option value="GBP">GBP</option>
+                <option value="RON">RON</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Category</label>
+              <select class="form-select" id="editExpCategory">
+                <option value="accommodation">Accommodation</option>
+                <option value="food">Food</option>
+                <option value="transport">Transport</option>
+                <option value="activities">Activities</option>
+                <option value="shopping">Shopping</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Payment Method</label>
+              <select class="form-select" id="editExpPayment">
+                <option value="card">Card</option>
+                <option value="cash">Cash</option>
+                <option value="transfer">Transfer</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Date</label>
+              <input type="date" class="form-control" id="editExpDate" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="saveExpenseBtn" onclick="saveEditExpense()">
+            <i class="bi bi-check-lg me-1"></i>Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
