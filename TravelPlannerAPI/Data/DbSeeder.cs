@@ -5,8 +5,27 @@ namespace TravelPlannerAPI.Data;
 
 public static class DbSeeder
 {
+        // Fixed GUID so the frontend DEFAULT_USER always matches the DB record
+    public static readonly Guid DemoUserId = new("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+
     public static async Task SeedAsync(ApplicationDbContext context)
     {
+        // Seed demo user if not present
+        if (!await context.Users.AnyAsync(u => u.Id == DemoUserId))
+        {
+            context.Users.Add(new User
+            {
+                Id           = DemoUserId,
+                FirstName    = "Cristian",
+                LastName     = "Stoian",
+                Email        = "cristian.stoian@gmail.com",
+                PasswordHash = "demo",
+                CreatedAt    = DateTime.UtcNow,
+                UpdatedAt    = DateTime.UtcNow
+            });
+            await context.SaveChangesAsync();
+        }
+
         if (await context.Destinations.AnyAsync())
             return;
 

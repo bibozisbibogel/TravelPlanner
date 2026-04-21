@@ -392,6 +392,24 @@
           notes: document.getElementById('description').value || null
         });
 
+        // Auto-create one itinerary day per day of the trip
+        const start = new Date(startDate);
+        const end   = new Date(endDate);
+        const dayPromises = [];
+        let current = new Date(start);
+        let dayNum  = 1;
+        while (current <= end) {
+          dayPromises.push(ItineraryDaysAPI.create({
+            tripId:    trip.id,
+            dayNumber: dayNum,
+            date:      current.toISOString().split('T')[0],
+            title:     `Day ${dayNum}`
+          }));
+          current.setDate(current.getDate() + 1);
+          dayNum++;
+        }
+        await Promise.all(dayPromises);
+
         document.getElementById('successMsg').classList.remove('d-none');
         let w = 0;
         const bar = document.getElementById('progressBar');

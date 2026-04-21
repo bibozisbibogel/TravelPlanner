@@ -87,3 +87,20 @@ const ItineraryActivitiesAPI = {
   update: (id, data) => apiFetch(`/itineraryactivities/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id) => apiFetch(`/itineraryactivities/${id}`, { method: 'DELETE' }),
 };
+
+/* ===== Weather (OpenWeatherMap via backend proxy) ===== */
+const WeatherAPI = {
+  getForecast: (city) => apiFetch(`/weather?city=${encodeURIComponent(city)}`),
+};
+
+/* ===== Search (SerpAPI via backend proxy) ===== */
+const SearchAPI = {
+  flights: (from, to, departDate, returnDate) =>
+    apiFetch(`/search/flights?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&departDate=${departDate}${returnDate ? '&returnDate=' + returnDate : ''}`),
+  hotels: (location, checkIn, checkOut) =>
+    apiFetch(`/search/hotels?location=${encodeURIComponent(location)}&checkIn=${checkIn}&checkOut=${checkOut}`),
+  restaurants: (location) =>
+    apiFetch(`/search/restaurants?location=${encodeURIComponent(location)}`),
+  places: (location) =>
+    apiFetch(`/search/places?location=${encodeURIComponent(location)}`),
+};

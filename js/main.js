@@ -4,6 +4,7 @@
 
 // Default mock user (simulates a logged-in session)
 const DEFAULT_USER = {
+  id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
   name: 'Cristian Stoian',
   email: 'cristian.stoian@gmail.com',
   avatar: 'CS'
