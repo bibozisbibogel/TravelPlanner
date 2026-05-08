@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using TravelPlannerAPI.Data;
 using TravelPlannerAPI.Models;
+using TravelPlannerAPI.Services;
 
 namespace TravelPlannerAPI.Controllers;
 
@@ -9,85 +8,54 @@ namespace TravelPlannerAPI.Controllers;
 [Route("api/[controller]")]
 public class AccommodationsController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IAccommodationService _service;
 
-    public AccommodationsController(ApplicationDbContext context)
+    public AccommodationsController(IAccommodationService service)
     {
-        _context = context;
+        _service = service;
     }
 
     // GET: api/accommodations?tripId={tripId}
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Accommodation>>> GetAll([FromQuery] Guid? tripId)
     {
-        var query = _context.Accommodations.AsQueryable();
-
-        if (tripId.HasValue)
-            query = query.Where(a => a.TripId == tripId.Value);
-
-        return await query.OrderBy(a => a.CheckIn).ToListAsync();
+        var accommodations = await _service.GetAllAsync(tripId);
+        return Ok(accommodations);
     }
 
     // GET: api/accommodations/{id}
     [HttpGet("{id}")]
     public async Task<ActionResult<Accommodation>> GetById(Guid id)
     {
-        var accommodation = await _context.Accommodations.FindAsync(id);
-        if (accommodation == null)
-            return NotFound();
-
-        return accommodation;
+        var accommodation = await _service.GetByIdAsync(id);
+        if (accommodation == null) return NotFound();
+        return Ok(accommodation);
     }
 
     // POST: api/accommodations
     [HttpPost]
     public async Task<ActionResult<Accommodation>> Create(Accommodation accommodation)
     {
-        accommodation.Id = Guid.NewGuid();
-        accommodation.CreatedAt = DateTime.UtcNow;
-
-        _context.Accommodations.Add(accommodation);
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetById), new { id = accommodation.Id }, accommodation);
+        var created = await _service.CreateAsync(accommodation);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     // PUT: api/accommodations/{id}
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(Guid id, Accommodation accommodation)
     {
-        if (id != accommodation.Id)
-            return BadRequest();
-
-        var existing = await _context.Accommodations.FindAsync(id);
-        if (existing == null)
-            return NotFound();
-
-        existing.Name = accommodation.Name;
-        existing.Address = accommodation.Address;
-        existing.CheckIn = accommodation.CheckIn;
-        existing.CheckOut = accommodation.CheckOut;
-        existing.PricePerNight = accommodation.PricePerNight;
-        existing.BookingReference = accommodation.BookingReference;
-        existing.AccommodationType = accommodation.AccommodationType;
-        existing.Rating = accommodation.Rating;
-
-        await _context.SaveChangesAsync();
-
-        return Ok(existing);
+        if (id != accommodation.Id) return BadRequest();
+        var updated = await _service.UpdateAsync(id, accommodation);
+        if (updated == null) return NotFound();
+        return Ok(updated);
     }
 
     // DELETE: api/accommodations/{id}
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var accommodation = await _context.Accommodations.FindAsync(id);
-        if (accommodation == null)
-            return NotFound();
-
-        _context.Accommodations.Remove(accommodation);
-        await _context.SaveChangesAsync();
-
+        var deleted = await _service.DeleteAsync(id);
+        if (!deleted) return NotFound();
         return NoContent();
     }
 }

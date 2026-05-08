@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using TravelPlannerAPI.Data;
 using TravelPlannerAPI.Models;
+using TravelPlannerAPI.Services;
 
 namespace TravelPlannerAPI.Controllers;
 
@@ -9,86 +8,54 @@ namespace TravelPlannerAPI.Controllers;
 [Route("api/[controller]")]
 public class ItineraryDaysController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IItineraryDayService _service;
 
-    public ItineraryDaysController(ApplicationDbContext context)
+    public ItineraryDaysController(IItineraryDayService service)
     {
-        _context = context;
+        _service = service;
     }
 
     // GET: api/itinerarydays?tripId={tripId}
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ItineraryDay>>> GetAll([FromQuery] Guid? tripId)
     {
-        var query = _context.ItineraryDays
-            .Include(d => d.Activities.OrderBy(a => a.SortOrder))
-            .AsQueryable();
-
-        if (tripId.HasValue)
-            query = query.Where(d => d.TripId == tripId.Value);
-
-        return await query.OrderBy(d => d.DayNumber).ToListAsync();
+        var days = await _service.GetAllAsync(tripId);
+        return Ok(days);
     }
 
     // GET: api/itinerarydays/{id}
     [HttpGet("{id}")]
     public async Task<ActionResult<ItineraryDay>> GetById(Guid id)
     {
-        var day = await _context.ItineraryDays
-            .Include(d => d.Activities.OrderBy(a => a.SortOrder))
-            .FirstOrDefaultAsync(d => d.Id == id);
-
-        if (day == null)
-            return NotFound();
-
-        return day;
+        var day = await _service.GetByIdAsync(id);
+        if (day == null) return NotFound();
+        return Ok(day);
     }
 
     // POST: api/itinerarydays
     [HttpPost]
     public async Task<ActionResult<ItineraryDay>> Create(ItineraryDay day)
     {
-        day.Id = Guid.NewGuid();
-        day.CreatedAt = DateTime.UtcNow;
-
-        _context.ItineraryDays.Add(day);
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetById), new { id = day.Id }, day);
+        var created = await _service.CreateAsync(day);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     // PUT: api/itinerarydays/{id}
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(Guid id, ItineraryDay day)
     {
-        if (id != day.Id)
-            return BadRequest();
-
-        var existing = await _context.ItineraryDays.FindAsync(id);
-        if (existing == null)
-            return NotFound();
-
-        existing.DayNumber = day.DayNumber;
-        existing.Date = day.Date;
-        existing.Title = day.Title;
-        existing.Notes = day.Notes;
-
-        await _context.SaveChangesAsync();
-
-        return Ok(existing);
+        if (id != day.Id) return BadRequest();
+        var updated = await _service.UpdateAsync(id, day);
+        if (updated == null) return NotFound();
+        return Ok(updated);
     }
 
     // DELETE: api/itinerarydays/{id}
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var day = await _context.ItineraryDays.FindAsync(id);
-        if (day == null)
-            return NotFound();
-
-        _context.ItineraryDays.Remove(day);
-        await _context.SaveChangesAsync();
-
+        var deleted = await _service.DeleteAsync(id);
+        if (!deleted) return NotFound();
         return NoContent();
     }
 }

@@ -301,15 +301,27 @@
       const e = document.getElementById('endDate').value;
       const info = document.getElementById('durationInfo');
       const text = document.getElementById('durationText');
+      const endInput = document.getElementById('endDate');
+
+      if (s) {
+        endInput.setAttribute('min', s);
+      }
+
       if (s && e) {
         const days = Math.ceil((new Date(e) - new Date(s)) / 86400000);
         if (days > 0) {
           text.textContent = `Duration: ${days} ${days === 1 ? 'day' : 'days'}`;
           info.classList.remove('d-none');
-          document.getElementById('endDate').setAttribute('min', s);
+          info.className = 'alert alert-info py-2 small';
+          endInput.setCustomValidity('');
         } else {
-          info.classList.add('d-none');
+          text.textContent = 'Return date must be after departure date.';
+          info.classList.remove('d-none');
+          info.className = 'alert alert-danger py-2 small';
+          endInput.setCustomValidity('Return date must be after departure date.');
         }
+      } else {
+        info.classList.add('d-none');
       }
     }
 
@@ -337,6 +349,8 @@
     // Form submit
     document.getElementById('tripForm').addEventListener('submit', async function(e) {
       e.preventDefault();
+      // Re-run date check before submit
+      updateDuration();
       if (!this.checkValidity()) {
         this.classList.add('was-validated');
         return;

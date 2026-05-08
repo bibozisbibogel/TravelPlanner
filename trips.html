@@ -254,7 +254,31 @@
       new bootstrap.Modal(document.getElementById('editTripModal')).show();
     }
 
+    function showEditError(msg) {
+      const el = document.getElementById('editTripError');
+      el.textContent = msg;
+      el.classList.remove('d-none');
+    }
+
+    function clearEditError() {
+      document.getElementById('editTripError').classList.add('d-none');
+    }
+
     async function saveEditTrip() {
+      clearEditError();
+      const title     = document.getElementById('editTitle').value.trim();
+      const startDate = document.getElementById('editStartDate').value;
+      const endDate   = document.getElementById('editEndDate').value;
+      const travelers = parseInt(document.getElementById('editTravelers').value) || 0;
+
+      if (!title) { showEditError('Title is required.'); return; }
+      if (!startDate) { showEditError('Start date is required.'); return; }
+      if (!endDate) { showEditError('End date is required.'); return; }
+      if (new Date(endDate) < new Date(startDate)) {
+        showEditError('End date must be on or after the start date.'); return;
+      }
+      if (travelers < 1) { showEditError('At least 1 traveler is required.'); return; }
+
       const btn = document.getElementById('saveEditBtn');
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
@@ -262,10 +286,10 @@
         await TripsAPI.update(editingTripId, {
           id: editingTripId,
           destinationId: document.getElementById('editDestId').value,
-          title: document.getElementById('editTitle').value,
-          startDate: document.getElementById('editStartDate').value,
-          endDate: document.getElementById('editEndDate').value,
-          travelersCount: parseInt(document.getElementById('editTravelers').value) || 1,
+          title,
+          startDate,
+          endDate,
+          travelersCount: travelers,
           totalBudget: parseFloat(document.getElementById('editBudget').value) || null,
           status: document.getElementById('editStatus').value,
           notes: document.getElementById('editNotes').value || null
@@ -273,7 +297,7 @@
         bootstrap.Modal.getInstance(document.getElementById('editTripModal')).hide();
         await loadTrips();
       } catch (err) {
-        alert('Failed to update trip: ' + (err.message || JSON.stringify(err)));
+        showEditError('Failed to update trip: ' + (err.message || JSON.stringify(err)));
       } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Save Changes';
@@ -302,6 +326,7 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
+          <div id="editTripError" class="alert alert-danger py-2 small d-none"></div>
           <div class="row g-3">
             <div class="col-12">
               <label class="form-label fw-semibold">Title</label>
