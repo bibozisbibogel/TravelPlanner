@@ -263,11 +263,13 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
+          <div id="activityError" class="alert alert-danger py-2 small d-none"></div>
           <input type="hidden" id="activityId" />
           <input type="hidden" id="activityDayNum" />
           <div class="mb-3">
             <label class="form-label fw-semibold">Title <span class="text-danger">*</span></label>
             <input type="text" class="form-control" id="activityTitle" placeholder="e.g. Visit Eiffel Tower" />
+            <div class="invalid-feedback">Title is required.</div>
           </div>
           <div class="row g-3 mb-3">
             <div class="col-md-6">
@@ -930,6 +932,8 @@
 
     function openAddActivity(dayNum) {
       editingActivityIdx = null;
+      document.getElementById('activityError').classList.add('d-none');
+      document.getElementById('activityTitle').classList.remove('is-invalid');
       document.getElementById('activityModalLabel').textContent = 'Add Activity';
       document.getElementById('activityDayNum').value = dayNum;
       document.getElementById('activityId').value = '';
@@ -958,12 +962,17 @@
     }
 
     async function saveActivity() {
+      const errEl   = document.getElementById('activityError');
+      const titleEl = document.getElementById('activityTitle');
+      errEl.classList.add('d-none');
+      titleEl.classList.remove('is-invalid');
+
       const dayNum   = parseInt(document.getElementById('activityDayNum').value);
       const id       = document.getElementById('activityId').value;
       const day      = DAYS[dayNum];
       const payload  = {
         itineraryDayId: day.dayId,
-        title:          document.getElementById('activityTitle').value.trim(),
+        title:          titleEl.value.trim(),
         time:           document.getElementById('activityTime').value || null,
         category:       document.getElementById('activityCategory').value,
         description:    document.getElementById('activityDesc').value.trim() || null,
@@ -973,7 +982,12 @@
                            : DAYS[dayNum].items.length
       };
 
-      if (!payload.title) { alert('Title is required.'); return; }
+      if (!payload.title) {
+        titleEl.classList.add('is-invalid');
+        errEl.textContent = 'Activity title is required.';
+        errEl.classList.remove('d-none');
+        return;
+      }
 
       try {
         let saved;

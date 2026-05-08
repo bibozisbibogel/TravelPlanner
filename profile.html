@@ -232,25 +232,25 @@
           <div class="row g-3">
             <div class="col-6">
               <div class="text-center p-3 bg-primary bg-opacity-10 rounded-3">
-                <div class="fw-bold fs-4 text-primary">6</div>
+                <div class="fw-bold fs-4 text-primary" id="statTrips">–</div>
                 <small class="text-muted">Total Trips</small>
               </div>
             </div>
             <div class="col-6">
               <div class="text-center p-3 bg-success bg-opacity-10 rounded-3">
-                <div class="fw-bold fs-4 text-success">12</div>
+                <div class="fw-bold fs-4 text-success" id="statCountries">–</div>
                 <small class="text-muted">Countries Visited</small>
               </div>
             </div>
             <div class="col-6">
               <div class="text-center p-3 bg-warning bg-opacity-10 rounded-3">
-                <div class="fw-bold fs-4 text-warning">48</div>
+                <div class="fw-bold fs-4 text-warning" id="statDays">–</div>
                 <small class="text-muted">Travel Days</small>
               </div>
             </div>
             <div class="col-6">
               <div class="text-center p-3 bg-info bg-opacity-10 rounded-3">
-                <div class="fw-bold fs-4 text-info">$14,200</div>
+                <div class="fw-bold fs-4 text-info" id="statSpentProfile">–</div>
                 <small class="text-muted">Total Spent</small>
               </div>
             </div>
@@ -258,30 +258,16 @@
         </div>
 
         <div class="card tp-card p-4 mb-4">
-          <h6 class="fw-bold mb-3"><i class="bi bi-geo-alt me-2 text-danger"></i>Favorite Destinations</h6>
-          <div class="d-flex flex-wrap gap-2">
-            <span class="badge bg-light text-dark border px-3 py-2">🇯🇵 Japan</span>
-            <span class="badge bg-light text-dark border px-3 py-2">🇫🇷 France</span>
-            <span class="badge bg-light text-dark border px-3 py-2">🇮🇩 Bali</span>
-            <span class="badge bg-light text-dark border px-3 py-2">🇬🇷 Greece</span>
-            <span class="badge bg-light text-dark border px-3 py-2">🇮🇹 Italy</span>
+          <h6 class="fw-bold mb-3"><i class="bi bi-geo-alt me-2 text-danger"></i>Countries Visited</h6>
+          <div class="d-flex flex-wrap gap-2" id="favDestinations">
+            <span class="text-muted small">Loading...</span>
           </div>
         </div>
 
         <div class="card tp-card p-4">
           <h6 class="fw-bold mb-3"><i class="bi bi-suitcase-lg me-2 text-primary"></i>Latest Trip</h6>
-          <div class="d-flex gap-3 align-items-center">
-            <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=100&q=80"
-                 class="rounded-2 flex-shrink-0" style="width:64px;height:64px;object-fit:cover;"
-                 alt="Bali" />
-            <div>
-              <div class="fw-semibold">Bali Relaxation</div>
-              <div class="text-muted small"><i class="bi bi-geo-alt me-1"></i>Bali, Indonesia</div>
-              <div class="text-muted small"><i class="bi bi-calendar3 me-1"></i>1–14 Dec 2024</div>
-              <a href="trip-details.html" class="btn btn-outline-primary btn-sm mt-2">
-                <i class="bi bi-eye me-1"></i>Details
-              </a>
-            </div>
+          <div id="latestTripCard">
+            <p class="text-muted small">Loading...</p>
           </div>
         </div>
 
@@ -386,6 +372,87 @@
       hint.textContent = lv.label;
     }
 
+    async function loadProfileStats() {
+      const user = getCurrentUser();
+      if (!user.id) return;
+      try {
+        const trips = await TripsAPI.getAll(user.id);
+        const tripCount = trips.length;
+
+        // Travel days = sum of (endDate - startDate) for each trip
+        let totalDays = 0;
+        let totalSpent = 0;
+        const countries = new Set();
+        let latestTrip = null;
+
+        for (const t of trips) {
+          const start = new Date(t.startDate);
+          const end   = new Date(t.endDate);
+          if (!isNaN(start) && !isNaN(end) && end > start) {
+            totalDays += Math.ceil((end - start) / 86400000);
+          }
+          const expenses = (t.expenses || []);
+          expenses.forEach(e => { totalSpent += e.amount; });
+          if (t.destination?.country) countries.add(t.destination.country);
+          if (!latestTrip || new Date(t.startDate) > new Date(latestTrip.startDate)) {
+            latestTrip = t;
+          }
+        }
+
+        // Update header trip count
+        const tcEl = document.getElementById('tripCount');
+        if (tcEl) tcEl.textContent = tripCount;
+
+        // Update stats cards
+        const statTrips = document.getElementById('statTrips');
+        if (statTrips) statTrips.textContent = tripCount;
+
+        const statCountries = document.getElementById('statCountries');
+        if (statCountries) statCountries.textContent = countries.size;
+
+        const statDays = document.getElementById('statDays');
+        if (statDays) statDays.textContent = totalDays;
+
+        const statSpentProfile = document.getElementById('statSpentProfile');
+        if (statSpentProfile) statSpentProfile.textContent = formatCurrency(totalSpent);
+
+        // Update favorite destinations
+        const favDest = document.getElementById('favDestinations');
+        if (favDest && countries.size > 0) {
+          favDest.innerHTML = [...countries].slice(0, 6).map(c =>
+            `<span class="badge bg-light text-dark border px-3 py-2">${c}</span>`
+          ).join('');
+        }
+
+        // Update latest trip
+        const latestTripEl = document.getElementById('latestTripCard');
+        if (latestTripEl && latestTrip) {
+          const dest = latestTrip.destination;
+          const imgSrc = dest?.imageUrl || `https://placehold.co/64x64/0d6efd/white?text=${encodeURIComponent(dest?.name?.[0] ?? 'T')}`;
+          latestTripEl.innerHTML = `
+            <div class="d-flex gap-3 align-items-center">
+              <img src="${imgSrc}" class="rounded-2 flex-shrink-0"
+                   style="width:64px;height:64px;object-fit:cover;" alt="${dest?.name ?? ''}"
+                   onerror="this.src='https://placehold.co/64x64/0d6efd/white?text=T'" />
+              <div>
+                <div class="fw-semibold">${latestTrip.title}</div>
+                <div class="text-muted small">
+                  <i class="bi bi-geo-alt me-1"></i>${dest ? dest.name + ', ' + dest.country : 'Unknown'}
+                </div>
+                <div class="text-muted small">
+                  <i class="bi bi-calendar3 me-1"></i>${formatDate(latestTrip.startDate)} – ${formatDate(latestTrip.endDate)}
+                </div>
+                <a href="trip-details.html?id=${latestTrip.id}" class="btn btn-outline-primary btn-sm mt-2">
+                  <i class="bi bi-eye me-1"></i>Details
+                </a>
+              </div>
+            </div>`;
+        }
+      } catch (err) {
+        console.warn('Could not load profile stats:', err);
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       initPrefTags();
       const user = getCurrentUser();
@@ -398,6 +465,7 @@
         `<i class="bi bi-envelope me-2"></i>${user.email}`;
       const initials = parts.map(p => p[0]).join('').toUpperCase().slice(0,2);
       document.getElementById('avatarCircle').textContent = initials;
+      loadProfileStats();
     });
   </script>
 </body>

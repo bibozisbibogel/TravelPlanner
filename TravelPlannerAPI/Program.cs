@@ -53,11 +53,17 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<ITripRepository, TripRepository>();
 builder.Services.AddScoped<IDestinationRepository, DestinationRepository>();
 builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
+builder.Services.AddScoped<IAccommodationRepository, AccommodationRepository>();
+builder.Services.AddScoped<IItineraryDayRepository, ItineraryDayRepository>();
+builder.Services.AddScoped<IItineraryActivityRepository, ItineraryActivityRepository>();
 
 // Domain services
 builder.Services.AddScoped<ITripService, TripService>();
 builder.Services.AddScoped<IDestinationService, DestinationService>();
 builder.Services.AddScoped<IExpenseService, ExpenseService>();
+builder.Services.AddScoped<IAccommodationService, AccommodationService>();
+builder.Services.AddScoped<IItineraryDayService, ItineraryDayService>();
+builder.Services.AddScoped<IItineraryActivityService, ItineraryActivityService>();
 
 // External API services (each gets its own named HttpClient)
 builder.Services.AddHttpClient<IWeatherService, WeatherService>();
