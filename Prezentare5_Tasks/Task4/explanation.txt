@@ -1,0 +1,62 @@
+Task: Create a functionality that allows users to upload and manage their profile images.
+
+WHAT WAS IMPLEMENTED
+====================
+A complete profile image upload and display system: users can upload an image
+from their profile page, the file is validated and stored on the server, the
+URL is saved in the database, and the avatar is displayed on both the profile
+page and the global navbar.
+
+KEY CHANGES
+===========
+
+1. ApplicationUser.cs
+   - Has an AvatarUrl property (string?) that stores the relative server path
+     to the uploaded image (e.g. /uploads/avatars/{id}.jpg).
+
+2. UsersController.cs — POST /api/users/{id}/avatar
+   - Accepts IFormFile; validates extension (.jpg, .jpeg, .png, .gif, .webp)
+     and file size (max 5 MB).
+   - Deletes any previous avatar for the same user before saving the new one.
+   - Saves the file to wwwroot/uploads/avatars/{userId}{ext}.
+   - Calls UserService.UpdateAvatarAsync() to persist the relative URL in the DB.
+   - Returns the full absolute URL so the frontend can update immediately.
+   - Protected with [Authorize] — only authenticated users can upload.
+
+3. UserService.cs — UpdateAvatarAsync(Guid id, string avatarUrl)
+   - Finds the user by ID, updates AvatarUrl, sets UpdatedAt, calls
+     _userManager.UpdateAsync().
+
+4. Program.cs
+   - app.UseStaticFiles() is registered so that wwwroot/uploads/avatars/ is
+     served as static content at /uploads/avatars/{filename}.
+
+5. profile.html
+   - Avatar circle has a camera-icon overlay (<label for="avatarFileInput">)
+     that triggers a hidden <input type="file" accept="image/*">.
+   - onchange="uploadAvatar(this)" fires automatically when a file is selected.
+   - uploadAvatar(): builds FormData, calls UsersAPI.uploadAvatar(), extracts
+     the relative path from the returned URL, updates localStorage/sessionStorage,
+     and calls renderNavUser() to refresh the navbar avatar in real time.
+   - updateAvatarDisplay(avatarUrl): shows <img> if avatarUrl exists, otherwise
+     falls back to initials in a colored circle.
+
+6. main.js — renderNavUser()
+   - Checks user.avatarUrl; if present, renders an <img> in the navbar dropdown.
+   - Includes an onerror fallback that hides the broken image and shows initials.
+
+7. api.js — UsersAPI.uploadAvatar(id, formData)
+   - Uses raw fetch() (not apiFetch) with multipart/form-data — no
+     Content-Type header so the browser sets the boundary automatically.
+   - Includes credentials: 'include' so the Identity cookie is sent.
+
+HOW IT WORKS END-TO-END
+========================
+1. User opens profile.html and clicks the camera icon on the avatar.
+2. Browser opens a file picker (accept="image/*").
+3. On file selection, uploadAvatar() sends a POST multipart request to
+   /api/users/{id}/avatar with the Identity cookie.
+4. The server validates, saves the file, updates the DB, and returns the URL.
+5. The frontend updates localStorage and re-renders the navbar avatar instantly.
+6. On any subsequent page load, renderNavUser() reads avatarUrl from storage
+   and displays the image in the top-right user badge.

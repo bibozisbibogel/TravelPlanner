@@ -27,6 +27,9 @@ public class User
     [MaxLength(3)]
     public string PreferredCurrency { get; set; } = "EUR";
 
+    [MaxLength(20)]
+    public string Role { get; set; } = "User";
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

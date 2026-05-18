@@ -1,0 +1,51 @@
+Task: Refactor authentication logic into a dedicated service layer.
+
+WHAT WAS DONE
+=============
+Authentication logic (register, login, logout) was extracted from UserService
+and moved into a new, dedicated IAuthService / AuthService pair. UserService
+now handles only user profile operations. The controller delegates to the
+correct service via dependency injection.
+
+BEFORE (problematic)
+====================
+- IUserService / UserService contained both authentication methods
+  (RegisterAsync, LoginAsync) AND profile methods (GetAllAsync, GetByIdAsync,
+  UpdateAsync, UpdateAvatarAsync) — a violation of the Single Responsibility
+  Principle.
+- UsersController injected SignInManager directly and called SignOutAsync
+  itself (auth logic leaking into the controller layer).
+
+AFTER (refactored)
+==================
+
+1. IAuthService.cs (NEW interface)
+   - RegisterAsync(RegisterRequest) — creates user, assigns "User" role
+   - LoginAsync(email, password, isPersistent) — validates password, sets cookie
+   - LogoutAsync() — clears the Identity cookie
+
+2. AuthService.cs (NEW implementation)
+   - Injects UserManager<ApplicationUser> and SignInManager<ApplicationUser>.
+   - All authentication logic lives here and nowhere else.
+
+3. IUserService.cs (MODIFIED — auth methods removed)
+   - Now only declares: GetAllAsync, GetByIdAsync, UpdateAsync, UpdateAvatarAsync.
+
+4. UserService.cs (MODIFIED — auth methods removed)
+   - Now only injects UserManager (no longer needs SignInManager).
+   - Only handles profile/data operations.
+
+5. UsersController.cs (MODIFIED)
+   - Injects IAuthService (for register/login/logout) and IUserService (for
+     profile operations) — no auth logic remains in the controller.
+   - SignInManager is no longer injected into the controller at all.
+
+6. Program.cs (MODIFIED)
+   - Registers the new service: builder.Services.AddScoped<IAuthService, AuthService>()
+
+CHECKLIST
+=========
+[x] Created an interface for the authentication service (IAuthService)
+[x] Implemented the service with necessary methods (AuthService)
+[x] Updated the controller to use the new service (UsersController)
+[x] Registered the service in the DI container (Program.cs)

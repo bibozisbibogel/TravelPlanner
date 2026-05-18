@@ -1,0 +1,88 @@
+Task 1 - User Registration Functionality
+=========================================
+
+OVERVIEW
+--------
+Implemented a complete user registration feature with a frontend form, backend API endpoint,
+input validation, password hashing, and the Repository + Service pattern.
+
+
+FRONTEND (register.html)
+------------------------
+- Registration form captures: First Name, Last Name, Email, Password, Confirm Password,
+  Country of Residence, Terms & Conditions checkbox.
+- Client-side validation:
+    * All required fields must be filled (HTML5 `required` attribute + novalidate).
+    * Password minimum 8 characters (enforced on frontend and backend).
+    * Real-time password strength indicator (weak / medium / good / excellent).
+    * Real-time password match check between "Password" and "Confirm Password" fields.
+    * User must accept Terms & Conditions to submit.
+- On successful registration, the user is automatically logged in (stored in localStorage)
+  and redirected to trips.html.
+- Friendly error messages displayed if the email is already in use or any other error occurs.
+
+
+BACKEND - DTOs (UserDtos.cs)
+-----------------------------
+- RegisterRequest DTO with validation attributes:
+    * [Required] on FirstName, LastName, Email, Password
+    * [EmailAddress] on Email - ensures valid email format
+    * [MinLength(8)] on Password - minimum password length enforced server-side
+    * [MaxLength] on all fields - prevents excessively long inputs
+- UpdateUserRequest DTO for the update profile endpoint (separate from register).
+- Using DTOs instead of the raw User model prevents exposing internal fields (Id, CreatedAt,
+  navigation properties) in the API contract.
+
+
+BACKEND - Repository Pattern (IUserRepository + UserRepository)
+---------------------------------------------------------------
+- IUserRepository extends the generic IRepository<User> interface.
+- Adds GetByEmailAsync(string email) for email-based lookups (used in register + login).
+- UserRepository implements all methods using ApplicationDbContext (EF Core + PostgreSQL).
+- Consistent with the pattern used by all other entities in the project
+  (Trip, Destination, Expense, Accommodation, ItineraryDay, ItineraryActivity).
+
+
+BACKEND - Service Layer (IUserService + UserService)
+-----------------------------------------------------
+- RegisterAsync: checks for duplicate email, hashes the password with BCrypt, creates the user.
+- LoginAsync: retrieves user by email, verifies BCrypt hash; also auto-upgrades any legacy
+  plain-text passwords to BCrypt on first login.
+- GetByIdAsync: delegates to repository.
+- UpdateAsync: updates profile fields (name, phone, avatar, currency), sets UpdatedAt.
+
+
+BACKEND - Password Hashing (BCrypt.Net-Next)
+--------------------------------------------
+- Passwords are hashed using BCrypt (work factor 11) before being stored in the database.
+- The plain text password is NEVER stored - only the hash.
+- BCrypt.Verify() is used during login to compare the entered password against the stored hash.
+- Package added: BCrypt.Net-Next 4.0.3
+
+
+BACKEND - Controller (UsersController.cs)
+------------------------------------------
+- POST /api/users/register - accepts RegisterRequest DTO, returns 409 Conflict if email
+  already exists, 201 Created with the new user object on success.
+- POST /api/users/login - accepts LoginRequest, returns 401 Unauthorized on failure.
+- GET  /api/users/{id} - returns user by ID.
+- PUT  /api/users/{id} - updates user profile fields.
+- Controller now uses IUserService (injected via DI) instead of ApplicationDbContext directly.
+
+
+BACKEND - Dependency Injection (Program.cs)
+--------------------------------------------
+- IUserRepository -> UserRepository registered as Scoped.
+- IUserService    -> UserService    registered as Scoped.
+
+
+FILES INCLUDED IN THIS SUBMISSION
+-----------------------------------
+- register.html       : Frontend registration form with validation
+- UserDtos.cs         : RegisterRequest and UpdateUserRequest DTOs with validation attributes
+- IUserRepository.cs  : Repository interface (extends IRepository<User>)
+- UserRepository.cs   : Repository implementation using EF Core
+- IUserService.cs     : Service interface
+- UserService.cs      : Service implementation with BCrypt password hashing
+- UsersController.cs  : API controller using IUserService
+- Program.cs          : DI registration of IUserRepository and IUserService

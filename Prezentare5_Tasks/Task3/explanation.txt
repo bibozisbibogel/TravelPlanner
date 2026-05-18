@@ -1,0 +1,69 @@
+Task: Add role-based authorization mechanism
+
+WHAT WAS IMPLEMENTED
+====================
+A full role-based authorization system built on top of ASP.NET Core Identity,
+with two roles ("Admin" and "User") enforced both at the API level and in the
+frontend.
+
+KEY CHANGES
+===========
+
+1. ApplicationDbContext.cs
+   - Inherits from IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
+   - Identity tables (AspNetRoles, AspNetUserRoles, etc.) are created automatically
+     by EF Core migrations.
+
+2. DbSeeder.cs
+   - Seeds roles "Admin" and "User" via RoleManager<IdentityRole<Guid>>.
+   - Seeds a demo user (cristian.stoian@gmail.com / Demo1234!) assigned to "User".
+   - Seeds an admin user (admin@travelplanner.com / Admin1234!) assigned to "Admin".
+   - Fixed GUIDs are used for both seed users so re-seeding is idempotent.
+
+3. UsersController.cs
+   - GET /api/users (GetAll): reads the X-User-Id header, looks up the caller,
+     calls _userManager.IsInRoleAsync(requester, "Admin"), and returns 403 if the
+     caller is not an admin.
+   - ToResponseAsync(): async helper that calls GetRolesAsync() and exposes the
+     user's role in the UserResponse DTO — never exposes PasswordHash.
+
+4. Program.cs
+   - AddIdentity<ApplicationUser, IdentityRole<Guid>>() registers both
+     UserManager and RoleManager in DI.
+   - ConfigureApplicationCookie() returns HTTP 401/403 instead of redirects,
+     so the API behaves correctly for JSON consumers.
+   - Startup sequence: MigrateAsync() → DbSeeder.SeedAsync(context, userManager, roleManager).
+
+5. ApplicationUser.cs
+   - Extends IdentityUser<Guid>; adds FirstName, LastName, AvatarUrl,
+     PreferredCurrency, CreatedAt, UpdatedAt, and navigation properties.
+
+6. main.js (frontend)
+   - requireRole(role): calls requireAuth() first, then checks user.role from
+     localStorage/sessionStorage; redirects to trips.html if the role doesn't match.
+   - renderNavUser(): shows an "Admin Panel" link only when user.role === 'Admin'.
+   - setCurrentUser() persists the role field so it survives page refreshes.
+
+7. admin.html (frontend)
+   - Protected by requireRole('Admin') at the top of the script block.
+   - Fetches all users via UsersAPI.getAll(user.id), which sends X-User-Id.
+   - Displays total users, regular users, admin count, and a searchable user table.
+
+HOW IT WORKS END-TO-END
+========================
+1. On first run, DbSeeder seeds the two roles and both seed users.
+2. A user logs in; the backend returns their role in the UserResponse JSON.
+3. The frontend stores role in localStorage/sessionStorage alongside id/email.
+4. Pages that need a role call requireRole('Admin'); non-admins are redirected.
+5. Admin API endpoints verify the role server-side via IsInRoleAsync — the
+   frontend check is UX-only; the real guard is always on the server.
+
+SECURITY NOTES
+==============
+- Roles are stored in ASP.NET Identity tables (AspNetRoles, AspNetUserRoles),
+  not in a custom column, so they can't be spoofed via a profile-update call.
+- The X-User-Id header approach is used because the app uses stateless REST
+  (no session cookies); every privileged endpoint re-validates the caller's role
+  against the database on each request.
+- Passwords are hashed by Identity's built-in PBKDF2 hasher; plain text is
+  never stored.
