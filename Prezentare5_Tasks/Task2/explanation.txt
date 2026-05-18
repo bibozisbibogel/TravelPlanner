@@ -1,0 +1,78 @@
+Task 2 - User Login Feature
+============================
+
+OVERVIEW
+--------
+Implemented a complete user login feature with credential validation, BCrypt password
+verification, Remember Me support, auth guards on protected pages, and secure API responses
+that never expose the password hash.
+
+
+FRONTEND - Login Form (login.html)
+------------------------------------
+- Form captures Email and Password with HTML5 `required` validation.
+- Client-side validation: shows an error message if either field is empty before making any
+  API call.
+- Show/hide password toggle button.
+- Auth redirect guard: if the user is already authenticated (token in localStorage or
+  sessionStorage), the login page immediately redirects to trips.html — no need to log in again.
+- Remember Me checkbox:
+    * Checked (default): credentials stored in localStorage — persists across browser sessions.
+    * Unchecked: credentials stored in sessionStorage — cleared when the tab/window closes.
+- On failed login: error message is shown and the button is re-enabled so the user can retry.
+- On successful login: user data is saved and the user is redirected to trips.html (dashboard).
+
+
+FRONTEND - Auth Utilities (main.js)
+-------------------------------------
+- setCurrentUser(user, remember): saves to localStorage (remember=true) or sessionStorage
+  (remember=false), clearing the other storage to avoid conflicts.
+- getCurrentUser(): reads from localStorage first, then sessionStorage; falls back to
+  DEFAULT_USER for pages that don't require authentication (index, landing).
+- logout(): clears both localStorage and sessionStorage, then redirects to login.html.
+- requireAuth(): checks for a stored user in either storage; redirects to login.html if none
+  found. Called at the top of every protected page.
+
+
+FRONTEND - Protected Pages Auth Guard
+---------------------------------------
+requireAuth() is called on all pages that require login:
+- trips.html
+- profile.html
+- new-trip.html
+- trip-details.html
+- budget.html
+- explore.html
+
+Any unauthenticated user trying to access these pages is immediately redirected to login.html.
+
+
+BACKEND - Secure API Response (UserDtos.cs + UsersController.cs)
+------------------------------------------------------------------
+- Added UserResponse DTO: contains only the fields safe to expose (Id, FirstName, LastName,
+  Email, Phone, AvatarUrl, PreferredCurrency, CreatedAt).
+- PasswordHash is NEVER included in any API response (register, login, getById, update).
+- UsersController maps all User entities to UserResponse via a private ToResponse() helper
+  before returning them to the client.
+
+
+BACKEND - Authentication Logic (UserService.cs - from Task 1)
+--------------------------------------------------------------
+- LoginAsync(email, password): retrieves user by email, then verifies the entered password
+  against the stored BCrypt hash using BCrypt.Verify().
+- Returns null if user not found or password is incorrect → controller returns 401 Unauthorized.
+- Legacy plain-text passwords (demo user) are auto-upgraded to BCrypt on first successful login.
+
+
+FILES INCLUDED IN THIS SUBMISSION
+------------------------------------
+- login.html         : Login form with validation, Remember Me, auth guard
+- main.js            : setCurrentUser with remember param, requireAuth(), updated logout()
+- UserDtos.cs        : Added UserResponse DTO (no PasswordHash)
+- UsersController.cs : Returns UserResponse on all endpoints (register, login, get, update)
+- trips.html         : Added requireAuth()
+- profile.html       : Added requireAuth()
+- new-trip.html      : Added requireAuth()
+- trip-details.html  : Added requireAuth()
+- budget.html        : Added requireAuth()
+- explore.html       : Added requireAuth()

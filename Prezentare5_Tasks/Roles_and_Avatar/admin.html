@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel – TravelPlanner</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="index.html">
+        <i class="bi bi-airplane-fill me-2"></i>TravelPlanner
+        <span class="badge bg-warning text-dark ms-2 small">Admin</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="trips.html">My Trips</a></li>
+          <li class="nav-item"><a class="nav-link active" href="admin.html">Admin Panel</a></li>
+        </ul>
+        <div id="themeToggleWrap" class="d-flex align-items-center"></div>
+        <ul class="navbar-nav" id="navUser"></ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== HEADER ===== -->
+  <div style="background:linear-gradient(135deg,#212529,#343a40); padding:2rem 0; color:white;">
+    <div class="container">
+      <h2 class="fw-bold mb-1"><i class="bi bi-shield-lock me-2 text-warning"></i>Admin Panel</h2>
+      <p class="opacity-75 mb-0">Manage users and application settings</p>
+    </div>
+  </div>
+
+  <main class="container py-4">
+
+    <!-- Stats row -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="card text-center p-3 border-0 shadow-sm">
+          <div class="text-primary fs-1 fw-bold" id="totalUsers">—</div>
+          <div class="text-muted small">Total Users</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card text-center p-3 border-0 shadow-sm">
+          <div class="text-success fs-1 fw-bold" id="totalRegular">—</div>
+          <div class="text-muted small">Regular Users</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card text-center p-3 border-0 shadow-sm">
+          <div class="text-warning fs-1 fw-bold" id="totalAdmins">—</div>
+          <div class="text-muted small">Administrators</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- User table -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+        <h5 class="fw-bold mb-0"><i class="bi bi-people me-2"></i>Registered Users</h5>
+        <div class="input-group" style="max-width:260px;">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input type="text" class="form-control" id="userSearch" placeholder="Search by name or email..."
+                 oninput="filterUsers()" />
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div id="loadingMsg" class="text-center py-5 text-muted">
+          <div class="spinner-border text-primary mb-2"></div>
+          <p>Loading users...</p>
+        </div>
+        <div id="errorMsg" class="alert alert-danger m-3 d-none"></div>
+        <div class="table-responsive d-none" id="tableWrap">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>User</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Member Since</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    requireRole('Admin');
+
+    let allUsers = [];
+
+    async function loadUsers() {
+      const user = getCurrentUser();
+      try {
+        allUsers = await UsersAPI.getAll(user.id);
+        document.getElementById('loadingMsg').classList.add('d-none');
+        document.getElementById('tableWrap').classList.remove('d-none');
+
+        document.getElementById('totalUsers').textContent = allUsers.length;
+        document.getElementById('totalRegular').textContent = allUsers.filter(u => u.role === 'User').length;
+        document.getElementById('totalAdmins').textContent = allUsers.filter(u => u.role === 'Admin').length;
+
+        renderTable(allUsers);
+      } catch (err) {
+        document.getElementById('loadingMsg').classList.add('d-none');
+        const errEl = document.getElementById('errorMsg');
+        errEl.textContent = err.message || 'Failed to load users.';
+        errEl.classList.remove('d-none');
+      }
+    }
+
+    function renderTable(users) {
+      const tbody = document.getElementById('usersTableBody');
+      if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">No users found.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = users.map(u => {
+        const initials = `${u.firstName[0]}${u.lastName[0]}`.toUpperCase();
+        const avatarHtml = u.avatarUrl
+          ? `<img src="http://localhost:5168${u.avatarUrl}" class="rounded-circle me-2"
+                  style="width:36px;height:36px;object-fit:cover;" alt="avatar">`
+          : `<span class="rounded-circle bg-primary text-white d-inline-flex align-items-center
+                         justify-content-center fw-bold me-2"
+                   style="width:36px;height:36px;font-size:0.8rem;">${initials}</span>`;
+        const roleBadge = u.role === 'Admin'
+          ? '<span class="badge bg-warning text-dark">Admin</span>'
+          : '<span class="badge bg-secondary">User</span>';
+        return `
+          <tr>
+            <td>${avatarHtml}${u.firstName} ${u.lastName}</td>
+            <td>${u.email}</td>
+            <td>${roleBadge}</td>
+            <td>${new Date(u.createdAt).toLocaleDateString('en-US', { day:'numeric', month:'short', year:'numeric' })}</td>
+          </tr>`;
+      }).join('');
+    }
+
+    function filterUsers() {
+      const q = document.getElementById('userSearch').value.toLowerCase();
+      const filtered = allUsers.filter(u =>
+        `${u.firstName} ${u.lastName}`.toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q)
+      );
+      renderTable(filtered);
+    }
+
+    loadUsers();
+  </script>
+</body>
+</html>

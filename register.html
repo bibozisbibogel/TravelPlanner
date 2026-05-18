@@ -197,16 +197,20 @@
       btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating account...';
 
       try {
-        const user = await UsersAPI.register({
+        await UsersAPI.register({
           firstName: first,
           lastName: last,
           email: email,
-          passwordHash: pass
+          password: pass
         });
+        // Sign in after registration to get the Identity session cookie
+        const user = await UsersAPI.login(email, pass, true);
         setCurrentUser({
           id: user.id,
           name: user.firstName + ' ' + user.lastName,
-          email: user.email
+          email: user.email,
+          role: user.role,
+          avatarUrl: user.avatarUrl || null
         });
         window.location.href = 'trips.html';
       } catch (err) {
